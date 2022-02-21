@@ -16,7 +16,7 @@ export enum databaseStatus {
     inactive = 'inactive'
 }
 
-interface returnSkillDocument {
+export interface returnSkillDocument {
     _id: ObjectId;
     name?: string;
     course?: ObjectId;
@@ -25,7 +25,7 @@ interface returnSkillDocument {
     dbStatus?: databaseStatus;
 }
 
-interface insertSkillDocument {
+export interface insertSkillDocument {
     _id?: ObjectId;
     name: string;
     course?: ObjectId;
@@ -147,7 +147,6 @@ export class Skills {
                         }
                     }
                 );
-            console.log(result);
             return result.acknowledged;
         } catch (err) {
             logErrorMessage(err);

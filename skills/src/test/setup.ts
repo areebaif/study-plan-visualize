@@ -11,14 +11,14 @@ jest.mock('../nats-wrapper');
 beforeAll(async () => {
     mongo = await MongoMemoryServer.create();
     const mongoUri = mongo.getUri();
-    console.log(mongoUri);
     client = await mongoDBClient(mongoUri);
     db = await connectDb(mongoUri);
 });
 
 beforeEach(async () => {
-    const collections = await db.collections();
+    jest.clearAllMocks();
 
+    const collections = await db.collections();
     for (let collection of collections) {
         await collection.deleteMany({});
     }
