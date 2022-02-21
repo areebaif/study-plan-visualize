@@ -21,7 +21,6 @@ router.get(
     '/api/skills/learning',
     async (req: ReqAnnotateBodyString, res: Response, next: NextFunction) => {
         try {
-            console.log('logginf', req.body);
             const { id, name } = req.body;
             if (!id || !name)
                 throw new BadRequestError('please provide id and name ');
@@ -68,7 +67,6 @@ router.post(
     '/api/skills/add',
     async (req: ReqAnnotateBodyString, res: Response, next: NextFunction) => {
         try {
-            console.log('add route');
             // we need name, version, dbStatus
             const { name } = req.body;
             if (!name)
@@ -118,10 +116,7 @@ router.get(
     '/api/skills/all',
     async (req: ReqAnnotateBodyString, res: Response, next: NextFunction) => {
         try {
-            console.log('all route');
-            const dbStatus = databaseStatus.active;
             const skills = await Skills.getAllSkills(databaseStatus.active);
-            console.log(skills);
             res.status(200).send({ data: skills });
         } catch (err) {
             logErrorMessage(err);
@@ -134,7 +129,6 @@ router.get(
     '/api/skills/:id',
     async (req: ReqAnnotateBodyString, res: Response, next: NextFunction) => {
         try {
-            console.log('id route');
             const { id } = req.params;
             const _id = new ObjectId(id);
             const skill = await Skills.getSkillById(_id);
@@ -151,7 +145,6 @@ router.post(
     '/api/skills/destroy',
     async (req: ReqAnnotateBodyString, res: Response, next: NextFunction) => {
         try {
-            console.log('destroy route');
             const { id } = req.body;
             if (!id)
                 throw new BadRequestError('please provide id to delete skill');
@@ -183,7 +176,7 @@ router.post(
                     book: bookToJSON
                 });
             }
-            res.status(201).send({ data: skillDeleted });
+            res.status(202).send({ data: skillDeleted });
         } catch (err) {
             logErrorMessage(err);
             next(err);
@@ -195,7 +188,6 @@ router.post(
     '/api/skills/update',
     async (req: ReqAnnotateBodyString, res: Response, next: NextFunction) => {
         try {
-            console.log('add update');
             const { id, name } = req.body;
             if (!id || !name)
                 throw new BadRequestError(
@@ -251,7 +243,7 @@ router.post(
                 });
             }
 
-            res.status(201).send({ data: [skillDoc] });
+            res.status(200).send({ data: [skillDoc] });
         } catch (err) {
             logErrorMessage(err);
             next(err);
