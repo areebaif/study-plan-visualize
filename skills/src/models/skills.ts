@@ -214,14 +214,24 @@ export class Skills {
         try {
             const { _id, name, version } = updateProps;
             const db = await connectDb();
-
+            // check that we are at right ersion and then only update
+            const existingVersion = await Skills.findSkillByIdAndVersion(
+                _id,
+                version - 1
+            );
+            if (!existingVersion)
+                throw new DatabaseErrors(
+                    'we cannot update since the version of the record is not correct'
+                );
             const result: UpdateResult = await db
                 .collection('skills')
                 .updateOne({ _id }, { $set: { name: name, version: version } });
             return result.acknowledged;
         } catch (err) {
             logErrorMessage(err);
-            throw new DatabaseErrors('Unable to retrieve skill from database');
+            throw new DatabaseErrors(
+                'updating failed either version number not correct or something has gone wrong while updating'
+            );
         }
     }
 }
