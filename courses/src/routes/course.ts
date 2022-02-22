@@ -19,7 +19,7 @@ import { ProgrammingLng } from '../models/programmingLng';
 import { Course } from '../models/course';
 
 const router = express.Router();
-
+// TODO: add auth, fix publishing
 router.post(
     '/api/course/add',
     async (

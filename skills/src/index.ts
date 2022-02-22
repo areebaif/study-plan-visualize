@@ -24,7 +24,9 @@ const startServer = async () => {
             !process.env.MONGO_DB_CONNECTION_STRING ||
             !process.env.NATS_URL ||
             !process.env.NATS_CLUSTER_ID ||
-            !process.env.NATS_CLIENT_ID
+            !process.env.NATS_CLIENT_ID ||
+            !process.env.JWT ||
+            !process.env.NODE_ENV
         )
             throw new Error('environment variable not defined');
         // connect to nats

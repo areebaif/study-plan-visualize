@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+        - name: auth
+          image: areebaiftikhar/auth:v8
+          env:
+            - name: PORT
+              value: "3000"
+            - name: DATABASE
+              value: "mongodb://auth-mongo-srv:27017"
+            - name: JWT
+              valueFrom:
+                secretKeyRef:
+                  name: jwtkey
+                  key: JWTKEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-srv
+spec:
+  selector:
+    app: auth
+  ports:
+    - name: auth
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
