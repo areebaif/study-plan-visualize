@@ -1,13 +1,12 @@
 import express, { NextFunction, Response, Request } from 'express';
 import { ObjectId } from 'mongodb';
-
 import { natsWrapper } from '../nats-wrapper';
 import {
     skillCreatedPublisher,
     skillDeletedPublisher,
     skillUpdatedPublisher
 } from '../events/publishers';
-import { ReqAnnotateBodyString } from '../types/interfaceRequest';
+import { BodyProps, CustomRequest } from '../types/interfaceRequest';
 import { databaseStatus, Skills } from '../models/skills';
 import { BadRequestError } from '../errors/badRequestError';
 import { logErrorMessage } from '../errors/customError';
@@ -19,11 +18,17 @@ const router = express.Router();
 
 router.get(
     '/api/skills/learning',
-    async (req: ReqAnnotateBodyString, res: Response, next: NextFunction) => {
+    async (
+        req: CustomRequest<BodyProps>,
+        res: Response,
+        next: NextFunction
+    ) => {
         try {
-            const { id, name } = req.body;
-            if (!id || !name)
-                throw new BadRequestError('please provide id and name ');
+            const { id, name, currentUser } = req.body;
+            if (!id || !name || !currentUser)
+                throw new BadRequestError(
+                    'please provide id and name or user not authenticated'
+                );
             const _id = new ObjectId(id);
 
             const skill = await Skills.getSkillById(_id);
@@ -65,30 +70,41 @@ router.get(
 // create
 router.post(
     '/api/skills/add',
-    async (req: ReqAnnotateBodyString, res: Response, next: NextFunction) => {
+    async (
+        req: CustomRequest<BodyProps>,
+        res: Response,
+        next: NextFunction
+    ) => {
         try {
             // we need name, version, dbStatus
-            const { name } = req.body;
-            if (!name)
+            const { name, currentUser } = req.body;
+            if (!name || !currentUser)
                 throw new BadRequestError('please provide name for skill');
             const dbStatus = databaseStatus.active;
+            const userId = new ObjectId(currentUser.id);
             // check if active entries in the db already have skill with this name
-            const existingSkill = await Skills.getSkillByName(name, dbStatus);
+            const existingSkill = await Skills.getSkillByName(
+                name,
+                dbStatus,
+                userId
+            );
             if (existingSkill?.length) {
                 throw new BadRequestError('skill name already in use');
             }
             // first time default version to 1
             const version = 1;
             const skillDoc = await Skills.insertSkill({
+                userId,
                 name,
                 version,
                 dbStatus
             });
             if (!skillDoc) throw new DatabaseErrors('unable to create skill');
-            if (!skillDoc.name || !skillDoc.version)
+            if (!skillDoc.name || !skillDoc.version || !skillDoc.userId)
                 throw new Error(
                     'we need skill name to publish skill:created event'
                 );
+            const userToJSON = userId.toJSON();
             const courseToJSON = skillDoc.course
                 ? skillDoc.course.toJSON()
                 : undefined;
@@ -98,6 +114,7 @@ router.post(
             // publish skillCreatedEvent
             await new skillCreatedPublisher(natsWrapper.client).publish({
                 _id: skillDoc._id.toString(),
+                userId: userToJSON,
                 name: skillDoc.name,
                 version: skillDoc.version,
                 course: courseToJSON,
@@ -114,9 +131,19 @@ router.post(
 // get all skills
 router.get(
     '/api/skills/all',
-    async (req: ReqAnnotateBodyString, res: Response, next: NextFunction) => {
+    async (
+        req: CustomRequest<BodyProps>,
+        res: Response,
+        next: NextFunction
+    ) => {
         try {
-            const skills = await Skills.getAllSkills(databaseStatus.active);
+            const { currentUser } = req.body;
+            if (!currentUser) throw new BadRequestError('user not loggedIn');
+            const userId = new ObjectId(currentUser.id);
+            const skills = await Skills.getAllSkillsbyUserId(
+                userId,
+                databaseStatus.active
+            );
             res.status(200).send({ data: skills });
         } catch (err) {
             logErrorMessage(err);
@@ -127,9 +154,15 @@ router.get(
 
 router.get(
     '/api/skills/:id',
-    async (req: ReqAnnotateBodyString, res: Response, next: NextFunction) => {
+    async (
+        req: CustomRequest<BodyProps>,
+        res: Response,
+        next: NextFunction
+    ) => {
         try {
             const { id } = req.params;
+            const { currentUser } = req.body;
+            if (!currentUser) throw new BadRequestError('user not loggedIn');
             const _id = new ObjectId(id);
             const skill = await Skills.getSkillById(_id);
             res.status(200).send({ data: skill });
@@ -143,12 +176,18 @@ router.get(
 // delete skills
 router.post(
     '/api/skills/destroy',
-    async (req: ReqAnnotateBodyString, res: Response, next: NextFunction) => {
+    async (
+        req: CustomRequest<BodyProps>,
+        res: Response,
+        next: NextFunction
+    ) => {
         try {
-            const { id } = req.body;
-            if (!id)
-                throw new BadRequestError('please provide id to delete skill');
-
+            const { id, currentUser } = req.body;
+            if (!id || !currentUser)
+                throw new BadRequestError(
+                    'please provide id to delete skill or user not authorised'
+                );
+            const userId = new ObjectId(currentUser.id);
             const _id = new ObjectId(id);
 
             const skill = await Skills.getSkillById(_id);
@@ -159,10 +198,11 @@ router.post(
 
             // publish event
             if (skillDeleted) {
-                if (!skill.version || !skill.name)
+                if (!skill.version || !skill.name || !skill.userId)
                     throw new Error(
                         'version dbStatus and name are needed to update record'
                     );
+                const userToJSON = userId.toJSON();
                 const courseToJSON = skill.course
                     ? skill.course.toJSON()
                     : undefined;
@@ -170,6 +210,7 @@ router.post(
 
                 await new skillDeletedPublisher(natsWrapper.client).publish({
                     _id: skill._id.toString(),
+                    userId: userToJSON,
                     name: skill.name,
                     version: skill.version,
                     course: courseToJSON,
@@ -186,15 +227,24 @@ router.post(
 
 router.post(
     '/api/skills/update',
-    async (req: ReqAnnotateBodyString, res: Response, next: NextFunction) => {
+    async (
+        req: CustomRequest<BodyProps>,
+        res: Response,
+        next: NextFunction
+    ) => {
         try {
-            const { id, name } = req.body;
-            if (!id || !name)
+            const { id, name, currentUser } = req.body;
+            if (!id || !name || !currentUser)
                 throw new BadRequestError(
                     'please provide id and name to update skill'
                 );
+            const userId = new ObjectId(currentUser.id);
             const dbStatus = databaseStatus.active;
-            const existingSkill = await Skills.getSkillByName(name, dbStatus);
+            const existingSkill = await Skills.getSkillByName(
+                name,
+                dbStatus,
+                userId
+            );
             if (existingSkill?.length) {
                 throw new BadRequestError(
                     'The skill name you are trying to update is already in use please provide new name'
@@ -215,7 +265,8 @@ router.post(
             const updateSkill = await Skills.updateSkillName({
                 _id,
                 name,
-                version: newVersion
+                version: newVersion,
+                userId
             });
             if (!updateSkill) throw new Error('unable to update skill by name');
 
@@ -224,10 +275,11 @@ router.post(
                 newVersion
             );
             if (skillDoc) {
-                if (!skillDoc.version || !skillDoc.name)
+                if (!skillDoc.version || !skillDoc.name || !skill.userId)
                     throw new Error(
                         'we need skill database doc details to publish this event'
                     );
+                const userToJSON = skill.userId.toJSON();
                 const courseToJSON = skillDoc.course
                     ? skillDoc.course.toJSON()
                     : undefined;
@@ -236,6 +288,7 @@ router.post(
                     : undefined;
                 await new skillUpdatedPublisher(natsWrapper.client).publish({
                     _id: skillDoc._id.toString(),
+                    userId: userToJSON,
                     name: skillDoc.name,
                     version: skillDoc.version,
                     course: courseToJSON,

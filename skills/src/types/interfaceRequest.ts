@@ -1,9 +1,13 @@
 import { Request } from 'express';
+import { ObjectId } from 'mongodb';
+import { currentUser, UserPayload } from '@ai-common-modules/auth';
 
-export interface ReqAnnotateBodyString extends Request {
-    body: { [key: string]: string | undefined };
+export interface BodyProps {
+    id: ObjectId;
+    name: string;
+    currentUser?: UserPayload | undefined;
 }
 
-export interface StringBody {
-    [key: string]: string | undefined;
+export interface CustomRequest<T> extends Request {
+    body: T;
 }

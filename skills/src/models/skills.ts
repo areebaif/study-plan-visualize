@@ -18,6 +18,7 @@ export enum databaseStatus {
 
 export interface returnSkillDocument {
     _id: ObjectId;
+    userId?: ObjectId;
     name?: string;
     course?: ObjectId;
     book?: ObjectId;
@@ -27,6 +28,7 @@ export interface returnSkillDocument {
 
 export interface insertSkillDocument {
     _id?: ObjectId;
+    userId: ObjectId;
     name: string;
     course?: ObjectId;
     book?: ObjectId;
@@ -35,11 +37,12 @@ export interface insertSkillDocument {
 }
 
 export class Skills {
+    static collectionName = 'skills';
     static async insertSkill(skillProps: insertSkillDocument) {
         try {
             const db = await connectDb();
             const { acknowledged, insertedId }: InsertOneResult = await db
-                .collection('skills')
+                .collection(Skills.collectionName)
                 .insertOne(skillProps);
             if (!acknowledged)
                 throw new DatabaseErrors('unable to insert skill ');
@@ -55,13 +58,14 @@ export class Skills {
 
     static async getSkillByName(
         name: string,
-        dbStatus: databaseStatus
+        dbStatus: databaseStatus,
+        userId: ObjectId
     ): Promise<returnSkillDocument[] | undefined> {
         try {
             const db = await connectDb();
             const result: WithId<returnSkillDocument>[] = await db
-                .collection('skills')
-                .find({ name, dbStatus })
+                .collection(Skills.collectionName)
+                .find({ name, dbStatus, userId })
                 .toArray();
             if (!result)
                 throw new DatabaseErrors(
@@ -74,14 +78,15 @@ export class Skills {
         }
     }
 
-    static async getAllSkills(
+    static async getAllSkillsbyUserId(
+        userId: ObjectId,
         dbStatus: databaseStatus
     ): Promise<returnSkillDocument[] | undefined> {
         try {
             const db = await connectDb();
             const result: WithId<returnSkillDocument>[] = await db
-                .collection('skills')
-                .find({ dbStatus })
+                .collection(Skills.collectionName)
+                .find({ userId, dbStatus })
                 .toArray();
             if (!result)
                 throw new DatabaseErrors(
@@ -98,7 +103,7 @@ export class Skills {
         try {
             const db = await connectDb();
             const result: WithId<returnSkillDocument>[] = await db
-                .collection('skills')
+                .collection(Skills.collectionName)
                 // you only want to return user password in case you are doing a password check
                 .find({ _id })
                 .toArray();
@@ -117,7 +122,7 @@ export class Skills {
         try {
             const db = await connectDb();
             const result: WithId<returnSkillDocument>[] = await db
-                .collection('skills')
+                .collection(Skills.collectionName)
                 // you only want to return user password in case you are doing a password check
                 .find({ $and: [{ _id: _id }, { version: version }] })
                 .toArray();
@@ -137,7 +142,7 @@ export class Skills {
         try {
             const db = await connectDb();
             const result = await db
-                .collection('skills')
+                .collection(Skills.collectionName)
                 /// when we delete we dont remove database entry we just change the status to inactive
                 .updateOne(
                     { _id },
@@ -163,7 +168,7 @@ export class Skills {
             const db = await connectDb();
             const { _id, version, course } = updateProps;
             const result: UpdateResult = await db
-                .collection('skills')
+                .collection(Skills.collectionName)
                 .updateOne(
                     { _id },
                     {
@@ -189,7 +194,7 @@ export class Skills {
             const db = await connectDb();
             const { _id, version, book } = updateProps;
             const result: UpdateResult = await db
-                .collection('skills')
+                .collection(Skills.collectionName)
                 .updateOne(
                     { _id },
                     {
@@ -210,9 +215,10 @@ export class Skills {
         _id: ObjectId;
         name: string;
         version: number;
+        userId: ObjectId;
     }) {
         try {
-            const { _id, name, version } = updateProps;
+            const { _id, name, version, userId } = updateProps;
             const db = await connectDb();
             // check that we are at right ersion and then only update
             const existingVersion = await Skills.findSkillByIdAndVersion(
@@ -224,8 +230,11 @@ export class Skills {
                     'we cannot update since the version of the record is not correct'
                 );
             const result: UpdateResult = await db
-                .collection('skills')
-                .updateOne({ _id }, { $set: { name: name, version: version } });
+                .collection(Skills.collectionName)
+                .updateOne(
+                    { _id, userId },
+                    { $set: { name: name, version: version } }
+                );
             return result.acknowledged;
         } catch (err) {
             logErrorMessage(err);
