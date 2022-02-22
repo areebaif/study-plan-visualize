@@ -1,0 +1,153 @@
+openapi: 3.0.1
+info:
+  title: auth-service
+  description: This is a sample authentication microservice
+  version: 1.0.0
+servers:
+  - url: localhost
+paths:
+  /api/users/signup:
+    post:
+      tags:
+        - auth
+      summary: create a new user
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        201:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: "#/components/schemas/LoggedInUser"
+        400:
+          description: invalid request body parameter values supplied
+          content:
+            application/json:
+              schema:
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Errors"
+  /api/users/signin:
+    post:
+      tags:
+        - auth
+      summary: sign-in a user
+      operationId: SigninUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: "#/components/schemas/LoggedInUser"
+        400:
+          description: invalid request body parameter values supplied
+          content:
+            application/json:
+              schema:
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Errors"
+  /api/users/currentuser:
+    get:
+      tags:
+        - auth
+      summary: check authentication status
+      operationId: authStatus
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  currentUser:
+                    $ref: "#/components/schemas/CurrentUser"
+
+        400:
+          description: unable to reach backend
+          content:
+            application/json:
+              schema:
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Errors"
+  /api/users/signout:
+    post:
+      tags:
+        - auth
+      summary: sign out user
+      operationId: signOut
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+
+        400:
+          description: unable to reach backend
+          content:
+            application/json:
+              schema:
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Errors"
+components:
+  schemas:
+    Errors:
+      type: object
+      properties:
+        message:
+          type: string
+        field:
+          nullable: true
+          type: string
+    LoggedInUser:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+    CurrentUser:
+      type: object
+      nullable: true
+      properties:
+        id:
+          type: string
+        email:
+          type: string

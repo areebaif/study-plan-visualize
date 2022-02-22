@@ -2,6 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJSDoc from 'swagger-jsdoc';
+import cookieSession from 'cookie-session';
 
 // environemnt variables defined in kubernetes deployments
 import 'dotenv/config.js';
@@ -33,7 +34,9 @@ const startServer = async () => {
             !process.env.MONGO_DB_CONNECTION_STRING ||
             !process.env.NATS_URL ||
             !process.env.NATS_CLUSTER_ID ||
-            !process.env.NATS_CLIENT_ID
+            !process.env.NATS_CLIENT_ID ||
+            !process.env.JWT ||
+            !process.env.NODE_ENV
         )
             throw new Error('environment variable not defined');
         console.log(process.env.NATS_CLIENT_ID);
@@ -65,6 +68,13 @@ const startServer = async () => {
         // connect to db
         await connectDb();
 
+        app.use(
+            cookieSession({
+                signed: false,
+                name: 'session',
+                secure: process.env.NODE_ENV === 'production'
+            })
+        );
         //middleware
         app.use(bodyParser.json());
 
