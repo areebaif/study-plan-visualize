@@ -16,6 +16,9 @@ spec:
         - name: book
           image: areebaiftikhar/book:v1
           env:
+            # this variabel will shift for production
+            - name: NODE_ENV
+              value: "development"
             - name: NATS_URL
               value: "http://nats-srv:4222"
             - name: NATS_CLUSTER_ID
