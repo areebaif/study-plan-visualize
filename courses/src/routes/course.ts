@@ -56,13 +56,6 @@ router.post(
 
                 const allSkills = await Promise.all(promiseSkillArray);
 
-                const checkInvalidRelationship = allSkills.map((skill) => {
-                    if (skill.course)
-                        throw new BadRequestError(
-                            'this skill is already tied to a course'
-                        );
-                });
-
                 // map and only keep ids to store in cpurse database
                 skillId = allSkills.map((skill) => {
                     return skill._id;
@@ -289,17 +282,6 @@ router.post(
                 });
 
                 const allSkills = await Promise.all(promiseSkillArray);
-
-                const checkInvalidRelationship = allSkills.map((skill) => {
-                    if (
-                        skill.course &&
-                        skill.course.toString() !== parsedId.toString()
-                    ) {
-                        throw new BadRequestError(
-                            'this skill is already tied to a course'
-                        );
-                    }
-                });
 
                 // map and only keep ids to store in cpurse database
                 newSkillId = allSkills.map((skill) => {
