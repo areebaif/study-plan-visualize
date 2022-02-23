@@ -20,7 +20,7 @@ export interface returnSkillDocument {
     _id: ObjectId;
     userId?: ObjectId;
     name?: string;
-    course?: ObjectId;
+    course?: ObjectId[];
     book?: ObjectId;
     version?: number;
     dbStatus?: databaseStatus;
@@ -30,7 +30,7 @@ export interface insertSkillDocument {
     _id?: ObjectId;
     userId: ObjectId;
     name: string;
-    course?: ObjectId;
+    course?: ObjectId[];
     book?: ObjectId;
     version: number;
     dbStatus?: databaseStatus;
@@ -56,7 +56,7 @@ export class Skills {
         }
     }
 
-    static async getSkillByName(
+    static async getSkillByNameAndUserId(
         name: string,
         dbStatus: databaseStatus,
         userId: ObjectId
@@ -159,10 +159,10 @@ export class Skills {
         }
     }
 
-    static async updateSkillByCourse(updateProps: {
+    static async addCourses(updateProps: {
         _id: ObjectId;
         version: number;
-        course: ObjectId | undefined;
+        course: ObjectId[] | undefined;
     }) {
         try {
             const db = await connectDb();
@@ -173,9 +173,35 @@ export class Skills {
                     { _id },
                     {
                         $set: {
-                            version: version,
-                            course: course
-                        }
+                            version: version
+                        },
+                        $addToSet: { course: { $each: course } }
+                    }
+                );
+            return result.acknowledged;
+        } catch (err) {
+            logErrorMessage(err);
+            throw new DatabaseErrors('Unable to retrieve skill from database');
+        }
+    }
+
+    static async removeCourses(updateProps: {
+        _id: ObjectId;
+        version: number;
+        course: ObjectId[] | undefined;
+    }) {
+        try {
+            const db = await connectDb();
+            const { _id, version, course } = updateProps;
+            const result: UpdateResult = await db
+                .collection(Skills.collectionName)
+                .updateOne(
+                    { _id },
+                    {
+                        $set: {
+                            version: version
+                        },
+                        $pullAll: { course: course }
                     }
                 );
             return result.acknowledged;

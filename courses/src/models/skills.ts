@@ -15,7 +15,7 @@ import { courseRouter } from '../routes/course';
 interface returnSkillDocument {
     _id?: ObjectId;
     name?: string;
-    course?: ObjectId;
+    course?: ObjectId[];
     book?: ObjectId;
     version?: number;
 }
@@ -23,7 +23,7 @@ interface returnSkillDocument {
 interface insertSkillDocument {
     _id?: ObjectId;
     name: string;
-    course?: ObjectId;
+    course?: ObjectId[];
     book?: ObjectId;
     version: number;
 }
@@ -124,7 +124,7 @@ export class Skills {
         _id: ObjectId;
         name: string;
         version: number;
-        course: ObjectId | undefined;
+        course: ObjectId[] | undefined;
     }) {
         try {
             const db = await connectDb();

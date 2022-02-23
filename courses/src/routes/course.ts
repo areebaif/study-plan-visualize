@@ -56,13 +56,6 @@ router.post(
 
                 const allSkills = await Promise.all(promiseSkillArray);
 
-                const checkInvalidRelationship = allSkills.map((skill) => {
-                    if (skill.course)
-                        throw new BadRequestError(
-                            'this skill is already tied to a course'
-                        );
-                });
-
                 // map and only keep ids to store in cpurse database
                 skillId = allSkills.map((skill) => {
                     return skill._id;
@@ -93,7 +86,7 @@ router.post(
                     return language._id;
                 });
             }
-            const courseCreated = await Course.insertCourse({
+            const courseDoc = await Course.insertCourse({
                 name: courseName,
                 courseURL,
                 learningStatus,
@@ -102,11 +95,9 @@ router.post(
                 languageId
             });
 
-            if (!courseCreated.length)
-                throw new DatabaseErrors('unable to create course');
+            if (!courseDoc) throw new DatabaseErrors('unable to create course');
 
             // publish the event
-            const courseDoc = courseCreated[0];
             if (
                 !courseDoc.name ||
                 !courseDoc.version ||
@@ -124,6 +115,7 @@ router.post(
             });
             await new CourseCreatedPublisher(natsWrapper.client).publish({
                 _id: courseDoc._id.toString(),
+                userId: 'test',
                 name: courseDoc.name,
                 version: courseDoc.version,
                 courseURL: courseDoc.courseURL,
@@ -131,7 +123,7 @@ router.post(
                 skillId: skillJSON,
                 languageId: languageJSON
             });
-            res.status(201).send({ data: courseCreated });
+            res.status(201).send({ data: [courseDoc] });
         } catch (err) {
             logErrorMessage(err);
             next(err);
@@ -167,7 +159,7 @@ router.get(
             const { id } = req.params;
             const _id = new ObjectId(id);
             const course = await Course.getCourseById(_id);
-            res.status(200).send({ data: course });
+            res.status(200).send({ data: [course] });
         } catch (err) {
             logErrorMessage(err);
             next(err);
@@ -192,12 +184,12 @@ router.post(
             const _id = new ObjectId(id);
 
             // find the course with id in database
-            const courseArray = await Course.getCourseById(_id);
-            if (!courseArray.length)
+            const course = await Course.getCourseById(_id);
+            if (!course)
                 throw new BadRequestError(
                     'cannot find coursewith the required id'
                 );
-            const course = courseArray[0];
+
             if (
                 !course.version ||
                 !course.name ||
@@ -220,6 +212,7 @@ router.post(
                 // publish event
                 await new CourseDeletedPublisher(natsWrapper.client).publish({
                     _id: course._id.toString(),
+                    userId: 'test',
                     name: course.name,
                     courseURL: course.courseURL,
                     learningStatus: course.learningStatus,
@@ -266,12 +259,11 @@ router.post(
                 );
             const parsedId = new ObjectId(courseId);
             // check if course exists in database
-            const existingCourse = await Course.getCourseById(parsedId);
-            if (!existingCourse)
+            const courseDoc = await Course.getCourseById(parsedId);
+            if (!courseDoc)
                 throw new BadRequestError(
                     'course does not exist with name and id'
                 );
-            const courseDoc = existingCourse[0];
             if (!courseDoc.version || !courseDoc.name)
                 throw new Error(
                     'version dbStatus and name are needed to update record'
@@ -290,17 +282,6 @@ router.post(
                 });
 
                 const allSkills = await Promise.all(promiseSkillArray);
-
-                const checkInvalidRelationship = allSkills.map((skill) => {
-                    if (
-                        skill.course &&
-                        skill.course.toString() !== parsedId.toString()
-                    ) {
-                        throw new BadRequestError(
-                            'this skill is already tied to a course'
-                        );
-                    }
-                });
 
                 // map and only keep ids to store in cpurse database
                 newSkillId = allSkills.map((skill) => {
@@ -377,6 +358,7 @@ router.post(
 
             await new CourseUpdatedPublisher(natsWrapper.client).publish({
                 _id: updatedCourse._id.toString(),
+                userId: 'test',
                 name: updatedCourse.name,
                 courseURL: updatedCourse.courseURL,
                 learningStatus: updatedCourse.learningStatus,
