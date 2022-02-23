@@ -62,7 +62,8 @@ export class Course {
                 throw new DatabaseErrors(
                     'Unable to retrieve course from database'
                 );
-            return result;
+            const document = result[0];
+            return document;
         } catch (err) {
             logErrorMessage(err);
             throw new DatabaseErrors('Unable to retrieve course from database');
@@ -210,13 +211,16 @@ export class Course {
     static async updateCourseRemoveSkillId(
         _id: ObjectId,
         version: number,
-        skillId: ObjectId
+        skillId: ObjectId[]
     ) {
         try {
             const db = await connectDb();
             const result: UpdateResult = await db
                 .collection('course')
-                .updateOne({ _id }, { $pull: { skillId }, $set: { version } });
+                .updateOne(
+                    { _id },
+                    { $pullAll: { skillId: skillId }, $set: { version } }
+                );
             return result.modifiedCount === 1;
         } catch (err) {
             logErrorMessage(err);

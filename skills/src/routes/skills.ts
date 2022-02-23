@@ -16,56 +16,57 @@ import { Book } from '../models/book';
 
 const router = express.Router();
 
-router.get(
-    '/api/skills/learning',
-    async (
-        req: CustomRequest<BodyProps>,
-        res: Response,
-        next: NextFunction
-    ) => {
-        try {
-            const { id, name, currentUser } = req.body;
-            if (!id || !name || !currentUser)
-                throw new BadRequestError(
-                    'please provide id and name or user not authenticated'
-                );
-            const _id = new ObjectId(id);
+// router.get(
+//     '/api/skills/learning',
+//     async (
+//         req: CustomRequest<BodyProps>,
+//         res: Response,
+//         next: NextFunction
+//     ) => {
+//         try {
+//             const { id, name, currentUser } = req.body;
+//             if (!id || !name || !currentUser)
+//                 throw new BadRequestError(
+//                     'please provide id and name or user not authenticated'
+//                 );
+//             const _id = new ObjectId(id);
 
-            const skill = await Skills.getSkillById(_id);
-            if (!skill)
-                throw new BadRequestError(
-                    'cannot find skill with the required id'
-                );
-            const { course, book } = skill;
-            let courseStatus = 0;
-            let bookStatus = 0;
-            if (course) {
-                const courseDocument = await Course.getCourseById(course);
-                const { learningStatus } = courseDocument;
-                courseStatus = learningStatus ? learningStatus : 0;
-            }
-            if (book) {
-                const bookDocument = await Book.getBookById(book);
-                const { learningStatus } = bookDocument;
-                bookStatus = learningStatus ? learningStatus : 0;
-            }
-            let result: number;
-            if (courseStatus && bookStatus) {
-                result = courseStatus * 0.5 + bookStatus * 0.5;
-            } else if (courseStatus && !bookStatus) {
-                result = courseStatus;
-            } else if (bookStatus && !courseStatus) {
-                result = bookStatus;
-            } else {
-                result = 0;
-            }
-            res.status(200).send({ data: result });
-        } catch (err) {
-            logErrorMessage(err);
-            next(err);
-        }
-    }
-);
+//             const skill = await Skills.getSkillById(_id);
+//             if (!skill)
+//                 throw new BadRequestError(
+//                     'cannot find skill with the required id'
+//                 );
+//             const { course, book } = skill;
+//             let courseStatus = 0;
+//             let bookStatus = 0;
+//             if (course) {
+//                 // TODO: update these you will need to do loops and arrays
+//                 const courseDocument = await Course.getCourseById(course);
+//                 const { learningStatus } = courseDocument;
+//                 courseStatus = learningStatus ? learningStatus : 0;
+//             }
+//             if (book) {
+//                 const bookDocument = await Book.getBookById(book);
+//                 const { learningStatus } = bookDocument;
+//                 bookStatus = learningStatus ? learningStatus : 0;
+//             }
+//             let result: number;
+//             if (courseStatus && bookStatus) {
+//                 result = courseStatus * 0.5 + bookStatus * 0.5;
+//             } else if (courseStatus && !bookStatus) {
+//                 result = courseStatus;
+//             } else if (bookStatus && !courseStatus) {
+//                 result = bookStatus;
+//             } else {
+//                 result = 0;
+//             }
+//             res.status(200).send({ data: result });
+//         } catch (err) {
+//             logErrorMessage(err);
+//             next(err);
+//         }
+//     }
+// );
 
 // create
 router.post(
@@ -83,7 +84,7 @@ router.post(
             const dbStatus = databaseStatus.active;
             const userId = new ObjectId(currentUser.id);
             // check if active entries in the db already have skill with this name
-            const existingSkill = await Skills.getSkillByName(
+            const existingSkill = await Skills.getSkillByNameAndUserId(
                 name,
                 dbStatus,
                 userId
@@ -105,8 +106,11 @@ router.post(
                     'we need skill name to publish skill:created event'
                 );
             const userToJSON = userId.toJSON();
-            const courseToJSON = skillDoc.course
-                ? skillDoc.course.toJSON()
+            // check of skillDoc.course exits. convert every value of course id to JSON
+            const courseToJSON = skillDoc.course?.length
+                ? skillDoc.course.map((id) => {
+                      return id.toJSON();
+                  })
                 : undefined;
             const bookToJSON = skillDoc.book
                 ? skillDoc.book.toJSON()
@@ -203,8 +207,10 @@ router.post(
                         'version dbStatus and name are needed to update record'
                     );
                 const userToJSON = userId.toJSON();
-                const courseToJSON = skill.course
-                    ? skill.course.toJSON()
+                const courseToJSON = skill.course?.length
+                    ? skill.course.map((id) => {
+                          return id.toJSON();
+                      })
                     : undefined;
                 const bookToJSON = skill.book ? skill.book.toJSON() : undefined;
 
@@ -240,7 +246,7 @@ router.post(
                 );
             const userId = new ObjectId(currentUser.id);
             const dbStatus = databaseStatus.active;
-            const existingSkill = await Skills.getSkillByName(
+            const existingSkill = await Skills.getSkillByNameAndUserId(
                 name,
                 dbStatus,
                 userId
@@ -280,8 +286,10 @@ router.post(
                         'we need skill database doc details to publish this event'
                     );
                 const userToJSON = skill.userId.toJSON();
-                const courseToJSON = skillDoc.course
-                    ? skillDoc.course.toJSON()
+                const courseToJSON = skillDoc.course?.length
+                    ? skillDoc.course.map((id) => {
+                          return id.toJSON();
+                      })
                     : undefined;
                 const bookToJSON = skillDoc.book
                     ? skillDoc.book.toJSON()

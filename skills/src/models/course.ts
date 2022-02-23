@@ -22,7 +22,7 @@ interface returnCourseDocument {
 interface insertCourseDocument {
     _id?: ObjectId;
     name: string;
-    courseURL: string;
+    courseURL?: string;
     learningStatus: number;
     skillId?: ObjectId[];
     version: number;
@@ -84,7 +84,7 @@ export class Course {
     static async updateCourse(updateProps: {
         _id: ObjectId;
         name: string;
-        courseURL: string;
+        courseURL?: string;
         learningStatus: number;
         version: number;
         skillId?: ObjectId[] | undefined;
