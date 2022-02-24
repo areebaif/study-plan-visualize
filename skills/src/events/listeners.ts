@@ -539,31 +539,34 @@ export class ResourceDeletedListner extends Listener<ResourceDeletedEvent> {
         msg: Message
     ): Promise<void> {
         try {
-            const { _id, skillId, version } = data;
+            const { _id, version } = data;
             // check we have correct event version and then only update
             const existingVersion = version;
-            const parsedCourseId = new ObjectId(_id);
-            const courseArray = [parsedCourseId];
-            const existingCourse = await Course.getCourseByIdAndVersion(
-                parsedCourseId,
+            const parsedResourceId = new ObjectId(_id);
+            // this will be used later to update skills database
+            const resourceIdArray = [parsedResourceId];
+            const existingResource = await Resource.getResourceByIdAndVersion(
+                parsedResourceId,
                 existingVersion
             );
             if (!existingVersion)
                 throw new Error(
                     'Mismatch between existing version and event version, we cannot process yet'
                 );
-            const deleteCourse = await Course.deleteCourseById(parsedCourseId);
-            if (!deleteCourse)
+            const deleteResource = await Resource.deleteResourceById(
+                parsedResourceId
+            );
+            if (!deleteResource)
                 throw new Error(
                     'something went wrong and we will reporcess event when they are sent back to us again'
                 );
 
-            // if existingCourse did not have any skillid we can just ackowledge the event
-            if (!existingCourse.skillId) msg.ack();
+            // if existingResource did not have any skillid we can just ackowledge the event
+            if (!existingResource.skillId) msg.ack();
 
-            // check if the deleted course had any skills attached to it. Go update those skill docs
-            if (existingCourse.skillId) {
-                const parsedSkillArray = existingCourse.skillId.map(
+            // check if the deleted resource had any skills attached to it. Go update those skill docs
+            if (existingResource.skillId) {
+                const parsedSkillArray = existingResource.skillId.map(
                     (skillId) => {
                         return Skills.getSkillById(skillId);
                     }
@@ -575,11 +578,10 @@ export class ResourceDeletedListner extends Listener<ResourceDeletedEvent> {
                     if (!skill.version || !skill._id)
                         throw new Error('version not defined');
                     const newVersion = skill.version + 1;
-                    return Skills.removeCourses({
-                        // this is a pop case remove course ID
+                    return Skills.removeResource({
                         _id: skill._id,
                         version: newVersion,
-                        course: courseArray
+                        resourceId: resourceIdArray
                     });
                 });
                 const updatedSkills = await Promise.all(updateSkills);
@@ -607,12 +609,14 @@ export class ResourceDeletedListner extends Listener<ResourceDeletedEvent> {
                             throw new Error(
                                 'we need skill database doc details to publish this event'
                             );
+
                         const userToJSON = updatedSkill.userId.toJSON();
-                        const courseToJSON = updatedSkill.course?.length
-                            ? updatedSkill.course.map((id) => {
+                        const resourceToJSON = updatedSkill.resourceId?.length
+                            ? updatedSkill.resourceId.map((id) => {
                                   return id.toJSON();
                               })
                             : undefined;
+
                         return new skillUpdatedPublisher(
                             natsWrapper.client
                         ).publish({
@@ -620,7 +624,8 @@ export class ResourceDeletedListner extends Listener<ResourceDeletedEvent> {
                             userId: userToJSON,
                             name: updatedSkill.name,
                             version: updatedSkill.version,
-                            course: courseToJSON
+                            resourceId: resourceToJSON,
+                            dbStatus: updatedSkill.dbStatus
                         });
                     }
                 );

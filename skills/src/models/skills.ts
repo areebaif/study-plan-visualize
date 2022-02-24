@@ -171,7 +171,7 @@ export class Skills {
                         $set: {
                             version: version
                         },
-                        $addToSet: { course: { $each: resourceId } }
+                        $addToSet: { resourceId: { $each: resourceId } }
                     }
                 );
             return result.acknowledged;
@@ -208,7 +208,7 @@ export class Skills {
                         $set: {
                             version: version
                         },
-                        $pullAll: { course: resourceId }
+                        $pullAll: { resourceId: resourceId }
                     }
                 );
             return result.acknowledged;
