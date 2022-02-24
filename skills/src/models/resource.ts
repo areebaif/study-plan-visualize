@@ -88,7 +88,6 @@ export class Resource {
 
     static async updateResource(updateProps: {
         _id: ObjectId;
-        userId: ObjectId;
         name: string;
         type?: string;
         description?: string;
