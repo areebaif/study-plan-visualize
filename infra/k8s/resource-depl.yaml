@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: book-depl
+  name: resource-depl
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: book
+      app: resource
   template:
     metadata:
       labels:
-        app: book
+        app: resource
     spec:
       containers:
-        - name: book
-          image: areebaiftikhar/book:v1
+        - name: resource
+          image: areebaiftikhar/resource:v1
           env:
             # this variabel will shift for production
             - name: NODE_ENV
@@ -32,18 +32,23 @@ spec:
             - name: MONGO_DB_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
-                  name: auth-mongodb-uri
+                  name: course-mongodb-uri
                   key: URI
+            - name: JWT
+              valueFrom:
+                secretKeyRef:
+                  name: jwtkey
+                  key: JWTKEY
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: book-srv
+  name: resource-srv
 spec:
   selector:
-    app: book
+    app: resource
   ports:
-    - name: book
+    - name: resource
       protocol: TCP
       port: 3000
       targetPort: 3000
