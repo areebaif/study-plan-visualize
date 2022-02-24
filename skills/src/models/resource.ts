@@ -12,6 +12,7 @@ import { DatabaseErrors } from '../errors/databaseErrors';
 
 interface returnResourceDocument {
     _id: ObjectId;
+    userId?: ObjectId;
     name?: string;
     type?: string;
     learningStatus?: number;
@@ -21,8 +22,9 @@ interface returnResourceDocument {
 }
 interface insertResourceDocument {
     _id?: ObjectId;
+    userId: ObjectId;
     name: string;
-    type: string;
+    type: string | undefined;
     learningStatus: number;
     version: number;
     description?: string;
@@ -86,6 +88,7 @@ export class Resource {
 
     static async updateResource(updateProps: {
         _id: ObjectId;
+        userId: ObjectId;
         name: string;
         type?: string;
         description?: string;
@@ -136,7 +139,7 @@ export class Resource {
                 .toArray();
             if (!result.length)
                 throw new DatabaseErrors(
-                    'Unable to retrieve skill from database'
+                    'Unable to retrieve resource from database'
                 );
             const document = result[0];
             return document;

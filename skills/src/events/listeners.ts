@@ -3,50 +3,64 @@ import { ObjectId } from 'mongodb';
 import {
     Listener,
     Subjects,
-    courseCreatedEvent,
-    courseDeletedEvent,
-    courseUpdatedEvent
+    ResourceCreatedEvent,
+    ResourceDeletedEvent,
+    ResourceUpdatedEvent,
+    skillActiveStatus
 } from '@ai-common-modules/events';
 import { natsWrapper } from '../nats-wrapper';
 import { queueGroupName } from './quegroup';
-import { Course } from '../models/resource';
-import { databaseStatus, Skills } from '../models/skills';
+import { Resource } from '../models/resource';
+import { Skills } from '../models/skills';
 import { skillUpdatedPublisher } from './publishers';
 
-// TODO: fix events common module and fix names from course to resource
-export class ResourceCreatedListner extends Listener<courseCreatedEvent> {
-    readonly subject = Subjects.CourseCreated;
+// TODO: add user listeners
+
+export class ResourceCreatedListner extends Listener<ResourceCreatedEvent> {
+    readonly subject = Subjects.ResourceCreated;
     queueGroupName = queueGroupName;
     async onMessage(
-        data: courseCreatedEvent['data'],
+        data: ResourceCreatedEvent['data'],
         msg: Message
     ): Promise<void> {
         try {
-            const { _id, name, courseURL, learningStatus, skillId, version } =
-                data;
-            // create course in the database regardless if it is assosciated with skills or not
-            const parsedCourseId = new ObjectId(_id);
+            const {
+                _id,
+                userId,
+                name,
+                learningStatus,
+                version,
+                type,
+                skillId,
+                description
+            } = data;
+
+            // create resource in the database regardless of it is assosciated with any skill or not
+            const parsedResourceId = new ObjectId(_id);
+            const parsedUserId = new ObjectId(userId);
             const parsedSkillIdArray = skillId
                 ? skillId.map((skill) => {
                       return new ObjectId(skill);
                   })
                 : undefined;
 
-            const courseCreated = await Course.insertCourse({
-                _id: parsedCourseId,
+            const resourceCreated = await Resource.insertResource({
+                _id: parsedResourceId,
+                userId: parsedUserId,
                 name: name,
-                courseURL: courseURL,
+                type: type,
                 learningStatus: learningStatus,
                 version: version,
+                description: description,
                 skillId: parsedSkillIdArray
             });
 
             if (!parsedSkillIdArray) msg.ack();
 
-            // if course is assosciated with skill then we need to update skill db
+            // if resource is assosciated with skill then we need to update skill db
             if (parsedSkillIdArray) {
-                const parsedCourseArray = [parsedCourseId];
-                // if courseId is associsated with multiple skills we need to do promiseAll to update every skill
+                const parsedResourceArray = [parsedResourceId];
+                // if resourceId is associsated with multiple skills we need to do promiseAll to update every skill
                 const parsedSkillArray = parsedSkillIdArray.map((skillId) => {
                     return Skills.getSkillById(skillId);
                 });
@@ -56,10 +70,10 @@ export class ResourceCreatedListner extends Listener<courseCreatedEvent> {
                 const updateSkills = resolvedSkillDoc.map((skill) => {
                     if (!skill.version) throw new Error('version not defined');
                     const newVersion = skill.version + 1;
-                    return Skills.addCourses({
+                    return Skills.addResource({
                         _id: skill._id,
                         version: newVersion,
-                        course: parsedCourseArray
+                        resourceId: parsedResourceArray
                     });
                 });
                 const updatedSkills = await Promise.all(updateSkills);
@@ -89,8 +103,8 @@ export class ResourceCreatedListner extends Listener<courseCreatedEvent> {
                                 'we need skill database doc details to publish this event'
                             );
                         const userToJSON = updatedSkill.userId.toJSON();
-                        const courseToJSON = updatedSkill.course?.length
-                            ? updatedSkill.course.map((id) => {
+                        const resourceToJSON = updatedSkill.resourceId?.length
+                            ? updatedSkill.resourceId.map((id) => {
                                   return id.toJSON();
                               })
                             : undefined;
@@ -101,7 +115,8 @@ export class ResourceCreatedListner extends Listener<courseCreatedEvent> {
                             userId: userToJSON,
                             name: updatedSkill.name,
                             version: updatedSkill.version,
-                            course: courseToJSON
+                            resourceId: resourceToJSON,
+                            dbStatus: updatedSkill.dbStatus
                         });
                     }
                 );
@@ -114,56 +129,72 @@ export class ResourceCreatedListner extends Listener<courseCreatedEvent> {
     }
 }
 
-export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
-    readonly subject = Subjects.CourseUpdated;
+export class ResourceUpdatedListner extends Listener<ResourceUpdatedEvent> {
+    readonly subject = Subjects.ResourceUpdated;
     queueGroupName = queueGroupName;
     async onMessage(
-        data: courseUpdatedEvent['data'],
+        data: ResourceUpdatedEvent['data'],
         msg: Message
     ): Promise<void> {
         try {
-            const { _id, name, courseURL, learningStatus, skillId, version } =
-                data;
-            // find the course with the assosciated id: update only if the event version document is correct
-            const parsedCourseId = new ObjectId(_id);
-            const existingCourseVersion = version - 1;
-            const existingCourse = await Course.getCourseByIdAndVersion(
-                parsedCourseId,
-                existingCourseVersion
+            const {
+                _id,
+                userId,
+                name,
+                learningStatus,
+                version,
+                type,
+                skillId,
+                description
+            } = data;
+
+            // find the resource with the assosciated id: update only if the event version document is correct
+            const parsedResourceId = new ObjectId(_id);
+            const parsedUserId = new ObjectId(userId);
+            const existingResourceVersion = version - 1;
+
+            const existingResource = await Resource.getResourceByIdAndVersion(
+                parsedResourceId,
+                existingResourceVersion
             );
-            if (!existingCourse)
-                throw new Error('cannot find course with this id and version');
+
+            if (!existingResource)
+                throw new Error(
+                    'cannot find resource with this id and version'
+                );
 
             // santize skillId to be processed later
             const parsedSkillIdArray = skillId
                 ? skillId.map((skill) => new ObjectId(skill))
                 : undefined;
 
-            // we will update course regardless of what happens to the relationship between course and skill after the update event
-            const courseUpdated = await Course.updateCourse({
-                _id: parsedCourseId,
+            // we will update resource regardless of what happens to the relationship between resource and skill after the update event
+            const resourceUpdated = await Resource.updateResource({
+                _id: parsedResourceId,
+                userId: parsedUserId,
                 name: name,
-                courseURL: courseURL,
+                type: type,
                 learningStatus: learningStatus,
                 version: version,
+                description: description,
                 skillId: parsedSkillIdArray
             });
 
-            // In order to update skill database to new relation between skill and course
+            // In order to update skill database to new relation between skill and resource
             // We need to know what was the old relationship between them. We have to compare skillArray in previous record
             // to skill array in this event
 
-            // 1/4 there was no assosciated skillId in the last version of course document and new version of course document
+            // 1/4 there was no assosciated skillId in the last version of resource document and new version of resource document
             // we just acknowledge the message. No relationship have changed
-            if (!parsedSkillIdArray && !existingCourse.skillId) msg.ack();
+            if (!parsedSkillIdArray && !existingResource.skillId) msg.ack();
 
-            // 2/4 this is the case when there were existing skillId in old version of course but no more skillId now
-            // we simply remove courseId from all records in skill database
-            // This holds an edge case. What if course update event is triggered by skill delete event and skill and course had a previos relationship
+            // 2/4 this is the case when there were existing skillId in old version of resource but no more skillId now
+            // we simply remove resourceId from all records in skill database
+            // This holds an edge case. What if resource update event is triggered by skill delete event and skill and resource had a previos relationship
             // So we will only update active skills records
-            if (!parsedSkillIdArray && existingCourse.skillId) {
+            if (!parsedSkillIdArray && existingResource.skillId) {
                 console.log('inside 2nd case');
-                const parsedSkillArray = existingCourse.skillId.map(
+                const parsedSkillArray = existingResource.skillId.map(
                     (skillId) => {
                         return Skills.getSkillById(skillId);
                     }
@@ -172,18 +203,18 @@ export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
 
                 // update the skill database if skill is active
                 const activeSkill = resolvedSkillDoc.filter((skill) => {
-                    return skill.dbStatus === databaseStatus.active;
+                    return skill.dbStatus === skillActiveStatus.active;
                 });
                 if (activeSkill.length) {
-                    const parsedCourseArray = [parsedCourseId];
+                    const parsedResourceArray = [parsedResourceId];
                     const updateSkills = resolvedSkillDoc.map((skill) => {
                         if (!skill.version || !skill._id)
                             throw new Error('version not defined');
                         const newVersion = skill.version + 1;
-                        return Skills.removeCourses({
+                        return Skills.removeResource({
                             _id: skill._id,
                             version: newVersion,
-                            course: parsedCourseArray
+                            resourceId: parsedResourceArray
                         });
                     });
                     const updatedSkills = await Promise.all(updateSkills);
@@ -216,8 +247,9 @@ export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
                                     'we need skill database doc details to publish this event'
                                 );
                             const userToJSON = updatedSkill.userId.toJSON();
-                            const courseToJSON = updatedSkill.course?.length
-                                ? updatedSkill.course.map((id) => {
+                            const resourceToJSON = updatedSkill.resourceId
+                                ?.length
+                                ? updatedSkill.resourceId.map((id) => {
                                       return id.toJSON();
                                   })
                                 : undefined;
@@ -228,7 +260,8 @@ export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
                                 userId: userToJSON,
                                 name: updatedSkill.name,
                                 version: updatedSkill.version,
-                                course: courseToJSON
+                                resourceId: resourceToJSON,
+                                dbStatus: updatedSkill.dbStatus
                             });
                         }
                     );
@@ -237,11 +270,11 @@ export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
                 } else msg.ack();
             }
 
-            // 3/4 this handles the case when there are new skillId but no old skillId. So this is like a createcourse case
-            // This scenario will happen if course service was assosciated with some other service like language
-            if (parsedSkillIdArray && !existingCourse.skillId) {
+            // 3/4 this handles the case when there are new skillId but no old skillId. So this is like a createResource case
+            // This scenario will happen if resource service was assosciated with some other service like language
+            if (parsedSkillIdArray && !existingResource.skillId) {
                 console.log('inside 3rd case');
-                const parsedCourseArray = [parsedCourseId];
+                const parsedResourceArray = [parsedResourceId];
                 const parsedSkillArray = parsedSkillIdArray.map((skillId) => {
                     return Skills.getSkillById(skillId);
                 });
@@ -251,11 +284,10 @@ export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
                 const updateSkills = resolvedSkillDoc.map((skill) => {
                     if (!skill.version) throw new Error('version not defined');
                     const newVersion = skill.version + 1;
-                    return Skills.addCourses({
-                        // TODO: we need to push here
+                    return Skills.addResource({
                         _id: skill._id,
                         version: newVersion,
-                        course: parsedCourseArray
+                        resourceId: parsedResourceArray
                     });
                 });
                 const updatedSkills = await Promise.all(updateSkills);
@@ -285,8 +317,8 @@ export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
                                 'we need skill database doc details to publish this event'
                             );
                         const userToJSON = updatedSkill.userId.toJSON();
-                        const courseToJSON = updatedSkill.course?.length
-                            ? updatedSkill.course.map((id) => {
+                        const resourceToJSON = updatedSkill.resourceId?.length
+                            ? updatedSkill.resourceId.map((id) => {
                                   return id.toJSON();
                               })
                             : undefined;
@@ -297,21 +329,22 @@ export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
                             userId: userToJSON,
                             name: updatedSkill.name,
                             version: updatedSkill.version,
-                            course: courseToJSON
+                            resourceId: resourceToJSON,
+                            dbStatus: updatedSkill.dbStatus
                         });
                     }
                 );
                 await Promise.all(publishEventPromiseAll);
                 msg.ack();
             }
-            // 4/4 where skill already has relationship with course but some relationship bewteen skill and course changed in this version
+            // 4/4 where skill already has relationship with resource but some relationship bewteen skill and resource changed in this version
             // We need to find out which relationship have been updated
-            // This might also hold the edge case where skill delete triggered a course update event
-            if (parsedSkillIdArray && existingCourse.skillId) {
+            // This might also hold the edge case where skill delete triggered a resource update event
+            if (parsedSkillIdArray && existingResource.skillId) {
                 // we will create two arrays one with oldSkillId and one with new SkillIds
                 // we will compare both of them to see which skillId have been removed and which ahve been added and which skillId have remain same
 
-                // create a copy of parsedSkillIdArray: newSkillAray recieved in courseUpdatedEvent
+                // create a copy of parsedSkillIdArray: newSkillAray recieved in resourceUpdatedEvent
                 let newSkillIdtoBeProcessed: {
                     id: ObjectId;
                     found: boolean;
@@ -320,13 +353,13 @@ export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
                     const value = parsedSkillIdArray[x];
                     newSkillIdtoBeProcessed[x] = { id: value, found: true };
                 }
-                // create a skillId copy of the oldSkillArray: skillArray in existingCourse
+                // create a skillId copy of the oldSkillArray: skillArray in existingResource
                 const exisitngSkillId: {
                     id: ObjectId;
                     found: boolean;
                 }[] = [];
-                for (let x = 0; x < existingCourse.skillId.length; x++) {
-                    const value = existingCourse.skillId[x];
+                for (let x = 0; x < existingResource.skillId.length; x++) {
+                    const value = existingResource.skillId[x];
                     exisitngSkillId[x] = { id: value, found: false };
                 }
 
@@ -350,24 +383,24 @@ export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
                         }
                     }
                 }
-                const courseIdtobeAddedToSkill: ObjectId[] = [];
-                const courseIdtobeDeletedfromSkill: ObjectId[] = [];
+                const resourceIdtobeAddedToSkill: ObjectId[] = [];
+                const resourceIdtobeDeletedfromSkill: ObjectId[] = [];
                 for (let x = 0; x < newSkillIdtoBeProcessed.length; x++) {
                     if (newSkillIdtoBeProcessed[x].found)
-                        courseIdtobeAddedToSkill.push(
+                        resourceIdtobeAddedToSkill.push(
                             newSkillIdtoBeProcessed[x].id
                         );
                 }
 
                 for (let x = 0; x < exisitngSkillId.length; x++) {
                     if (!exisitngSkillId[x].found)
-                        courseIdtobeDeletedfromSkill.push(
+                        resourceIdtobeDeletedfromSkill.push(
                             exisitngSkillId[x].id
                         );
                 }
-                // update the skill database for deletecourseId
+                // update the skill database for deleteresourceId
                 // again handle edge case what if skillUpdated due to skill delete event being triggered
-                const deleteSkillIdArray = courseIdtobeDeletedfromSkill.map(
+                const deleteSkillIdArray = resourceIdtobeDeletedfromSkill.map(
                     (skillId) => {
                         return Skills.getSkillById(skillId);
                     }
@@ -377,27 +410,27 @@ export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
                 );
                 const updateOnlySkillInUse = resolveddeleteSkillDocs.filter(
                     (skill) => {
-                        return skill.dbStatus === databaseStatus.active;
+                        return skill.dbStatus === skillActiveStatus.active;
                     }
                 );
                 if (updateOnlySkillInUse.length) {
                     // TODO: this is the pop case we are deleting
-                    const courseArray = [parsedCourseId];
-                    const updateDeleteCourseId = updateOnlySkillInUse.map(
+                    const resourceArray = [parsedResourceId];
+                    const updateDeleteResourceId = updateOnlySkillInUse.map(
                         (skill) => {
                             if (!skill.version)
                                 throw new Error('version not defined');
                             const newVersion = skill.version + 1;
-                            return Skills.removeCourses({
+                            return Skills.removeResource({
                                 _id: skill._id,
                                 version: newVersion,
-                                course: courseArray
+                                resourceId: resourceArray
                             });
                         }
                     );
 
                     const updatedSkillwithDelete = await Promise.all(
-                        updateDeleteCourseId
+                        updateDeleteResourceId
                     );
 
                     const findUpdatedSkills = resolveddeleteSkillDocs.map(
@@ -427,8 +460,9 @@ export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
                                     'we need skill database doc details to publish this event'
                                 );
                             const userToJSON = updatedSkill.userId.toJSON();
-                            const courseToJSON = updatedSkill.course?.length
-                                ? updatedSkill.course.map((id) => {
+                            const resourceToJSON = updatedSkill.resourceId
+                                ?.length
+                                ? updatedSkill.resourceId.map((id) => {
                                       return id.toJSON();
                                   })
                                 : undefined;
@@ -439,16 +473,17 @@ export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
                                 userId: userToJSON,
                                 name: updatedSkill.name,
                                 version: updatedSkill.version,
-                                course: courseToJSON
+                                resourceId: resourceToJSON,
+                                dbStatus: updatedSkill.dbStatus
                             });
                         }
                     );
                     await Promise.all(publishPromiseAll);
                 }
 
-                // add new courseId to skill database
-                const courseArray = [parsedCourseId];
-                const addSkillIdArray = courseIdtobeAddedToSkill.map(
+                // add new resourceId to skill database
+                const resourceArray = [parsedResourceId];
+                const addSkillIdArray = resourceIdtobeAddedToSkill.map(
                     (skillId) => {
                         return Skills.getSkillById(skillId);
                     }
@@ -457,18 +492,20 @@ export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
                     addSkillIdArray
                 );
 
-                const updateAddCourseId = resolvedAddSkillIdDoc.map((skill) => {
-                    if (!skill.version) throw new Error('version not defined');
-                    const newVersion = skill.version + 1;
-                    // TODO: this is the add case we are adding push case
-                    return Skills.addCourses({
-                        _id: skill._id,
-                        version: newVersion,
-                        course: courseArray
-                    });
-                });
+                const updateAddResourceId = resolvedAddSkillIdDoc.map(
+                    (skill) => {
+                        if (!skill.version)
+                            throw new Error('version not defined');
+                        const newVersion = skill.version + 1;
+                        return Skills.addResource({
+                            _id: skill._id,
+                            version: newVersion,
+                            resourceId: resourceArray
+                        });
+                    }
+                );
                 const updatedSkillwithAdd = await Promise.all(
-                    updateAddCourseId
+                    updateAddResourceId
                 );
 
                 const findAddSkills = resolvedAddSkillIdDoc.map((skill) => {
@@ -493,8 +530,8 @@ export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
                                 'we need skill database doc details to publish this event'
                             );
                         const userToJSON = updatedSkill.userId.toJSON();
-                        const courseToJSON = updatedSkill.course?.length
-                            ? updatedSkill.course.map((id) => {
+                        const resourceToJSON = updatedSkill.resourceId?.length
+                            ? updatedSkill.resourceId.map((id) => {
                                   return id.toJSON();
                               })
                             : undefined;
@@ -505,7 +542,8 @@ export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
                             userId: userToJSON,
                             name: updatedSkill.name,
                             version: updatedSkill.version,
-                            course: courseToJSON
+                            resourceId: resourceToJSON,
+                            dbStatus: updatedSkill.dbStatus
                         });
                     }
                 );
@@ -519,39 +557,42 @@ export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
     }
 }
 
-export class ResourceDeletedListner extends Listener<courseDeletedEvent> {
-    readonly subject = Subjects.CourseDeleted;
+export class ResourceDeletedListner extends Listener<ResourceDeletedEvent> {
+    readonly subject = Subjects.ResourceDeleted;
     queueGroupName = queueGroupName;
     async onMessage(
-        data: courseDeletedEvent['data'],
+        data: ResourceDeletedEvent['data'],
         msg: Message
     ): Promise<void> {
         try {
-            const { _id, skillId, version } = data;
+            const { _id, version } = data;
             // check we have correct event version and then only update
             const existingVersion = version;
-            const parsedCourseId = new ObjectId(_id);
-            const courseArray = [parsedCourseId];
-            const existingCourse = await Course.getCourseByIdAndVersion(
-                parsedCourseId,
+            const parsedResourceId = new ObjectId(_id);
+            // this will be used later to update skills database
+            const resourceIdArray = [parsedResourceId];
+            const existingResource = await Resource.getResourceByIdAndVersion(
+                parsedResourceId,
                 existingVersion
             );
             if (!existingVersion)
                 throw new Error(
                     'Mismatch between existing version and event version, we cannot process yet'
                 );
-            const deleteCourse = await Course.deleteCourseById(parsedCourseId);
-            if (!deleteCourse)
+            const deleteResource = await Resource.deleteResourceById(
+                parsedResourceId
+            );
+            if (!deleteResource)
                 throw new Error(
                     'something went wrong and we will reporcess event when they are sent back to us again'
                 );
 
-            // if existingCourse did not have any skillid we can just ackowledge the event
-            if (!existingCourse.skillId) msg.ack();
+            // if existingResource did not have any skillid we can just ackowledge the event
+            if (!existingResource.skillId) msg.ack();
 
-            // check if the deleted course had any skills attached to it. Go update those skill docs
-            if (existingCourse.skillId) {
-                const parsedSkillArray = existingCourse.skillId.map(
+            // check if the deleted resource had any skills attached to it. Go update those skill docs
+            if (existingResource.skillId) {
+                const parsedSkillArray = existingResource.skillId.map(
                     (skillId) => {
                         return Skills.getSkillById(skillId);
                     }
@@ -563,11 +604,10 @@ export class ResourceDeletedListner extends Listener<courseDeletedEvent> {
                     if (!skill.version || !skill._id)
                         throw new Error('version not defined');
                     const newVersion = skill.version + 1;
-                    return Skills.removeCourses({
-                        // this is a pop case remove course ID
+                    return Skills.removeResource({
                         _id: skill._id,
                         version: newVersion,
-                        course: courseArray
+                        resourceId: resourceIdArray
                     });
                 });
                 const updatedSkills = await Promise.all(updateSkills);
@@ -595,12 +635,14 @@ export class ResourceDeletedListner extends Listener<courseDeletedEvent> {
                             throw new Error(
                                 'we need skill database doc details to publish this event'
                             );
+
                         const userToJSON = updatedSkill.userId.toJSON();
-                        const courseToJSON = updatedSkill.course?.length
-                            ? updatedSkill.course.map((id) => {
+                        const resourceToJSON = updatedSkill.resourceId?.length
+                            ? updatedSkill.resourceId.map((id) => {
                                   return id.toJSON();
                               })
                             : undefined;
+
                         return new skillUpdatedPublisher(
                             natsWrapper.client
                         ).publish({
@@ -608,7 +650,8 @@ export class ResourceDeletedListner extends Listener<courseDeletedEvent> {
                             userId: userToJSON,
                             name: updatedSkill.name,
                             version: updatedSkill.version,
-                            course: courseToJSON
+                            resourceId: resourceToJSON,
+                            dbStatus: updatedSkill.dbStatus
                         });
                     }
                 );
