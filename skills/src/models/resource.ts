@@ -10,67 +10,70 @@ import { connectDb } from '../services/mongodb';
 import { logErrorMessage } from '../errors/customError';
 import { DatabaseErrors } from '../errors/databaseErrors';
 
-interface returnCourseDocument {
+interface returnResourceDocument {
     _id: ObjectId;
     name?: string;
-    courseURL?: string;
+    type?: string;
     learningStatus?: number;
-    skillId?: ObjectId[];
     version?: number;
+    description?: string;
+    skillId?: ObjectId[];
 }
-
-interface insertCourseDocument {
+interface insertResourceDocument {
     _id?: ObjectId;
     name: string;
-    courseURL?: string;
+    type: string;
     learningStatus: number;
-    skillId?: ObjectId[];
     version: number;
+    description?: string;
+    skillId?: ObjectId[];
 }
 
-export class Course {
-    static async insertCourse(CourseProps: insertCourseDocument) {
+export class Resource {
+    static async insertResource(ResourceProps: insertResourceDocument) {
         try {
             const db = await connectDb();
             const { acknowledged, insertedId }: InsertOneResult = await db
-                .collection('course')
-                .insertOne(CourseProps);
+                .collection('resource')
+                .insertOne(ResourceProps);
             if (!acknowledged)
-                throw new DatabaseErrors('unable to insert course ');
-            const courseCreated = await Course.getCourseById(insertedId);
-            return courseCreated;
+                throw new DatabaseErrors('unable to insert resource ');
+            const resourceCreated = await Resource.getResourceById(insertedId);
+            return resourceCreated;
         } catch (err) {
             logErrorMessage(err);
             throw new DatabaseErrors(
-                'Unable to create course in database either name in use or database operation failed'
+                'Unable to create resource in database either name in use or database operation failed'
             );
         }
     }
 
-    static async getCourseById(_id: ObjectId) {
+    static async getResourceById(_id: ObjectId) {
         try {
             const db = await connectDb();
-            const result: WithId<returnCourseDocument>[] = await db
-                .collection('course')
+            const result: WithId<returnResourceDocument>[] = await db
+                .collection('resource')
                 .find({ _id })
                 .toArray();
             if (!result.length)
                 throw new DatabaseErrors(
-                    'Unable to retrieve course from database'
+                    'Unable to retrieve resource from database'
                 );
             const document = result[0];
             return document;
         } catch (err) {
             logErrorMessage(err);
-            throw new DatabaseErrors('Unable to retrieve course from database');
+            throw new DatabaseErrors(
+                'Unable to retrieve resource from database'
+            );
         }
     }
 
-    static async deleteCourseById(_id: ObjectId) {
+    static async deleteResourceById(_id: ObjectId) {
         try {
             const db = await connectDb();
             const result: DeleteResult = await db
-                .collection('course')
+                .collection('resource')
                 .deleteOne({ _id });
             return result.deletedCount === 1;
         } catch (err) {
@@ -81,27 +84,36 @@ export class Course {
         }
     }
 
-    static async updateCourse(updateProps: {
+    static async updateResource(updateProps: {
         _id: ObjectId;
         name: string;
-        courseURL?: string;
+        type?: string;
+        description?: string;
         learningStatus: number;
         version: number;
         skillId?: ObjectId[] | undefined;
     }) {
         try {
             const db = await connectDb();
-            const { _id, name, courseURL, learningStatus, version, skillId } =
-                updateProps;
+            const {
+                _id,
+                name,
+                type,
+                description,
+                learningStatus,
+                version,
+                skillId
+            } = updateProps;
 
             const result: UpdateResult = await db
-                .collection('course')
+                .collection('resource')
                 .updateOne(
                     { _id },
                     {
                         $set: {
                             name: name,
-                            courseURL: courseURL,
+                            type: type,
+                            description: description,
                             learningStatus: learningStatus,
                             version: version,
                             skillId: skillId
@@ -111,15 +123,15 @@ export class Course {
             return result.modifiedCount === 1;
         } catch (err) {
             logErrorMessage(err);
-            throw new DatabaseErrors('Unable to update course in database');
+            throw new DatabaseErrors('Unable to update resource in database');
         }
     }
 
-    static async getCourseByIdAndVersion(_id: ObjectId, version: number) {
+    static async getResourceByIdAndVersion(_id: ObjectId, version: number) {
         try {
             const db = await connectDb();
-            const result: WithId<returnCourseDocument>[] = await db
-                .collection('course')
+            const result: WithId<returnResourceDocument>[] = await db
+                .collection('resource')
                 .find({ $and: [{ _id: _id }, { version: version }] })
                 .toArray();
             if (!result.length)

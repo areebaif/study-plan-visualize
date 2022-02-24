@@ -16,24 +16,8 @@ build:
         manual:
           - src: "src/**/*.ts"
             dest: .
-    - image: areebaiftikhar/programming
-      context: programming-lng-service
-      docker:
-        dockerfile: Dockerfile.dev
-      sync:
-        manual:
-          - src: "src/**/*.ts"
-            dest: .
-    - image: areebaiftikhar/course
-      context: courses
-      docker:
-        dockerfile: Dockerfile.dev
-      sync:
-        manual:
-          - src: "src/**/*.ts"
-            dest: .
-    - image: areebaiftikhar/book
-      context: books-service
+    - image: areebaiftikhar/resource
+      context: resource
       docker:
         dockerfile: Dockerfile.dev
       sync:

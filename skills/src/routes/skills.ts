@@ -11,8 +11,6 @@ import { databaseStatus, Skills } from '../models/skills';
 import { BadRequestError } from '../errors/badRequestError';
 import { logErrorMessage } from '../errors/customError';
 import { DatabaseErrors } from '../errors/databaseErrors';
-import { Course } from '../models/course';
-import { Book } from '../models/book';
 
 const router = express.Router();
 
@@ -80,7 +78,9 @@ router.post(
             // we need name, version, dbStatus
             const { name, currentUser } = req.body;
             if (!name || !currentUser)
-                throw new BadRequestError('please provide name for skill');
+                throw new BadRequestError(
+                    'user not authorized or skill name not provided'
+                );
             const dbStatus = databaseStatus.active;
             const userId = new ObjectId(currentUser.id);
             // check if active entries in the db already have skill with this name
