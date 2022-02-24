@@ -171,7 +171,6 @@ export class ResourceUpdatedListner extends Listener<ResourceUpdatedEvent> {
             // we will update resource regardless of what happens to the relationship between resource and skill after the update event
             const resourceUpdated = await Resource.updateResource({
                 _id: parsedResourceId,
-                userId: parsedUserId,
                 name: name,
                 type: type,
                 learningStatus: learningStatus,
