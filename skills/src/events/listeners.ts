@@ -3,50 +3,61 @@ import { ObjectId } from 'mongodb';
 import {
     Listener,
     Subjects,
-    courseCreatedEvent,
-    courseDeletedEvent,
-    courseUpdatedEvent
+    ResourceCreatedEvent,
+    ResourceDeletedEvent,
+    ResourceUpdatedEvent
 } from '@ai-common-modules/events';
 import { natsWrapper } from '../nats-wrapper';
 import { queueGroupName } from './quegroup';
-import { Course } from '../models/resource';
-import { databaseStatus, Skills } from '../models/skills';
+import { Resource } from '../models/resource';
+import { Skills } from '../models/skills';
 import { skillUpdatedPublisher } from './publishers';
 
-// TODO: fix events common module and fix names from course to resource
-export class ResourceCreatedListner extends Listener<courseCreatedEvent> {
-    readonly subject = Subjects.CourseCreated;
+export class ResourceCreatedListner extends Listener<ResourceCreatedEvent> {
+    readonly subject = Subjects.ResourceCreated;
     queueGroupName = queueGroupName;
     async onMessage(
-        data: courseCreatedEvent['data'],
+        data: ResourceCreatedEvent['data'],
         msg: Message
     ): Promise<void> {
         try {
-            const { _id, name, courseURL, learningStatus, skillId, version } =
-                data;
-            // create course in the database regardless if it is assosciated with skills or not
-            const parsedCourseId = new ObjectId(_id);
+            const {
+                _id,
+                userId,
+                name,
+                learningStatus,
+                version,
+                type,
+                skillId,
+                description
+            } = data;
+
+            // create resource in the database regardless of it is assosciated with any skill or not
+            const parsedResourceId = new ObjectId(_id);
+            const parsedUserId = new ObjectId(userId);
             const parsedSkillIdArray = skillId
                 ? skillId.map((skill) => {
                       return new ObjectId(skill);
                   })
                 : undefined;
 
-            const courseCreated = await Course.insertCourse({
-                _id: parsedCourseId,
+            const resourceCreated = await Resource.insertResource({
+                _id: parsedResourceId,
+                userId: parsedUserId,
                 name: name,
-                courseURL: courseURL,
+                type: type,
                 learningStatus: learningStatus,
                 version: version,
+                description: description,
                 skillId: parsedSkillIdArray
             });
 
             if (!parsedSkillIdArray) msg.ack();
 
-            // if course is assosciated with skill then we need to update skill db
+            // if resource is assosciated with skill then we need to update skill db
             if (parsedSkillIdArray) {
-                const parsedCourseArray = [parsedCourseId];
-                // if courseId is associsated with multiple skills we need to do promiseAll to update every skill
+                const parsedResourceArray = [parsedResourceId];
+                // if resourceId is associsated with multiple skills we need to do promiseAll to update every skill
                 const parsedSkillArray = parsedSkillIdArray.map((skillId) => {
                     return Skills.getSkillById(skillId);
                 });
@@ -56,10 +67,10 @@ export class ResourceCreatedListner extends Listener<courseCreatedEvent> {
                 const updateSkills = resolvedSkillDoc.map((skill) => {
                     if (!skill.version) throw new Error('version not defined');
                     const newVersion = skill.version + 1;
-                    return Skills.addCourses({
+                    return Skills.addResource({
                         _id: skill._id,
                         version: newVersion,
-                        course: parsedCourseArray
+                        resourceId: parsedResourceArray
                     });
                 });
                 const updatedSkills = await Promise.all(updateSkills);
@@ -89,8 +100,8 @@ export class ResourceCreatedListner extends Listener<courseCreatedEvent> {
                                 'we need skill database doc details to publish this event'
                             );
                         const userToJSON = updatedSkill.userId.toJSON();
-                        const courseToJSON = updatedSkill.course?.length
-                            ? updatedSkill.course.map((id) => {
+                        const resourceToJSON = updatedSkill.resourceId?.length
+                            ? updatedSkill.resourceId.map((id) => {
                                   return id.toJSON();
                               })
                             : undefined;
@@ -101,7 +112,8 @@ export class ResourceCreatedListner extends Listener<courseCreatedEvent> {
                             userId: userToJSON,
                             name: updatedSkill.name,
                             version: updatedSkill.version,
-                            course: courseToJSON
+                            resourceId: resourceToJSON,
+                            dbStatus: updatedSkill.dbStatus
                         });
                     }
                 );
@@ -114,11 +126,11 @@ export class ResourceCreatedListner extends Listener<courseCreatedEvent> {
     }
 }
 
-export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
-    readonly subject = Subjects.CourseUpdated;
+export class ResourceUpdatedListner extends Listener<ResourceUpdatedEvent> {
+    readonly subject = Subjects.ResourceUpdated;
     queueGroupName = queueGroupName;
     async onMessage(
-        data: courseUpdatedEvent['data'],
+        data: ResourceUpdatedEvent['data'],
         msg: Message
     ): Promise<void> {
         try {
@@ -519,11 +531,11 @@ export class ResourceUpdatedListner extends Listener<courseUpdatedEvent> {
     }
 }
 
-export class ResourceDeletedListner extends Listener<courseDeletedEvent> {
-    readonly subject = Subjects.CourseDeleted;
+export class ResourceDeletedListner extends Listener<ResourceDeletedEvent> {
+    readonly subject = Subjects.ResourceDeleted;
     queueGroupName = queueGroupName;
     async onMessage(
-        data: courseDeletedEvent['data'],
+        data: ResourceDeletedEvent['data'],
         msg: Message
     ): Promise<void> {
         try {

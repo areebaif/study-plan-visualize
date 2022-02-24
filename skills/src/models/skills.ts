@@ -1,39 +1,26 @@
-import {
-    DeleteResult,
-    InsertOneResult,
-    ObjectId,
-    UpdateResult,
-    WithId
-} from 'mongodb';
-
+import { InsertOneResult, ObjectId, UpdateResult, WithId } from 'mongodb';
+import { skillActiveStatus } from '@ai-common-modules/events';
 import { connectDb } from '../services/mongodb';
 
 import { logErrorMessage } from '../errors/customError';
 import { DatabaseErrors } from '../errors/databaseErrors';
 
-export enum databaseStatus {
-    active = 'active',
-    inactive = 'inactive'
-}
-
 export interface returnSkillDocument {
-    _id: ObjectId;
+    _id?: ObjectId;
     userId?: ObjectId;
     name?: string;
-    course?: ObjectId[];
-    book?: ObjectId;
     version?: number;
-    dbStatus?: databaseStatus;
+    resourceId?: ObjectId[] | undefined;
+    dbStatus?: skillActiveStatus;
 }
 
 export interface insertSkillDocument {
     _id?: ObjectId;
     userId: ObjectId;
     name: string;
-    course?: ObjectId[];
-    book?: ObjectId;
     version: number;
-    dbStatus?: databaseStatus;
+    resourceId?: ObjectId[] | undefined;
+    dbStatus?: skillActiveStatus;
 }
 
 export class Skills {
@@ -58,7 +45,7 @@ export class Skills {
 
     static async getSkillByNameAndUserId(
         name: string,
-        dbStatus: databaseStatus,
+        dbStatus: skillActiveStatus,
         userId: ObjectId
     ): Promise<returnSkillDocument[] | undefined> {
         try {
@@ -80,7 +67,7 @@ export class Skills {
 
     static async getAllSkillsbyUserId(
         userId: ObjectId,
-        dbStatus: databaseStatus
+        dbStatus: skillActiveStatus
     ): Promise<returnSkillDocument[] | undefined> {
         try {
             const db = await connectDb();
@@ -148,7 +135,7 @@ export class Skills {
                     { _id },
                     {
                         $set: {
-                            dbStatus: databaseStatus.inactive
+                            dbStatus: skillActiveStatus.inactive
                         }
                     }
                 );
@@ -159,14 +146,23 @@ export class Skills {
         }
     }
 
-    static async addCourses(updateProps: {
+    static async addResource(updateProps: {
         _id: ObjectId;
         version: number;
-        course: ObjectId[] | undefined;
+        resourceId: ObjectId[] | undefined;
     }) {
         try {
             const db = await connectDb();
-            const { _id, version, course } = updateProps;
+            const { _id, version, resourceId } = updateProps;
+            // check that we are at right version and then only update
+            const existingVersion = await Skills.findSkillByIdAndVersion(
+                _id,
+                version - 1
+            );
+            if (!existingVersion)
+                throw new DatabaseErrors(
+                    'we cannot update since the version of the record is not correct'
+                );
             const result: UpdateResult = await db
                 .collection(Skills.collectionName)
                 .updateOne(
@@ -175,24 +171,35 @@ export class Skills {
                         $set: {
                             version: version
                         },
-                        $addToSet: { course: { $each: course } }
+                        $addToSet: { course: { $each: resourceId } }
                     }
                 );
             return result.acknowledged;
         } catch (err) {
             logErrorMessage(err);
-            throw new DatabaseErrors('Unable to retrieve skill from database');
+            throw new DatabaseErrors(
+                'Unable to add resource to database either record version incorrect or something has gone wrong'
+            );
         }
     }
 
-    static async removeCourses(updateProps: {
+    static async removeResource(updateProps: {
         _id: ObjectId;
         version: number;
-        course: ObjectId[] | undefined;
+        resourceId: ObjectId[] | undefined;
     }) {
         try {
             const db = await connectDb();
-            const { _id, version, course } = updateProps;
+            const { _id, version, resourceId } = updateProps;
+            // check that we are at right version and then only update
+            const existingVersion = await Skills.findSkillByIdAndVersion(
+                _id,
+                version - 1
+            );
+            if (!existingVersion)
+                throw new DatabaseErrors(
+                    'we cannot update since the version of the record is not correct'
+                );
             const result: UpdateResult = await db
                 .collection(Skills.collectionName)
                 .updateOne(
@@ -201,39 +208,15 @@ export class Skills {
                         $set: {
                             version: version
                         },
-                        $pullAll: { course: course }
+                        $pullAll: { course: resourceId }
                     }
                 );
             return result.acknowledged;
         } catch (err) {
             logErrorMessage(err);
-            throw new DatabaseErrors('Unable to retrieve skill from database');
-        }
-    }
-
-    static async updateSkillByBook(updateProps: {
-        _id: ObjectId;
-        version: number;
-        book: ObjectId | undefined;
-    }) {
-        try {
-            const db = await connectDb();
-            const { _id, version, book } = updateProps;
-            const result: UpdateResult = await db
-                .collection(Skills.collectionName)
-                .updateOne(
-                    { _id },
-                    {
-                        $set: {
-                            version: version,
-                            book: book
-                        }
-                    }
-                );
-            return result.acknowledged;
-        } catch (err) {
-            logErrorMessage(err);
-            throw new DatabaseErrors('Unable to retrieve skill from database');
+            throw new DatabaseErrors(
+                'Unable to remove resource either version number not correct or something has gone wrong'
+            );
         }
     }
 
@@ -246,7 +229,7 @@ export class Skills {
         try {
             const { _id, name, version, userId } = updateProps;
             const db = await connectDb();
-            // check that we are at right ersion and then only update
+            // check that we are at right version and then only update
             const existingVersion = await Skills.findSkillByIdAndVersion(
                 _id,
                 version - 1

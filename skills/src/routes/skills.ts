@@ -1,13 +1,14 @@
 import express, { NextFunction, Response, Request } from 'express';
 import { ObjectId } from 'mongodb';
 import { natsWrapper } from '../nats-wrapper';
+import { skillActiveStatus } from '@ai-common-modules/events';
 import {
     skillCreatedPublisher,
     skillDeletedPublisher,
     skillUpdatedPublisher
 } from '../events/publishers';
 import { BodyProps, CustomRequest } from '../types/interfaceRequest';
-import { databaseStatus, Skills } from '../models/skills';
+import { Skills } from '../models/skills';
 import { BadRequestError } from '../errors/badRequestError';
 import { logErrorMessage } from '../errors/customError';
 import { DatabaseErrors } from '../errors/databaseErrors';
@@ -75,13 +76,13 @@ router.post(
         next: NextFunction
     ) => {
         try {
-            // we need name, version, dbStatus
+            // TODO: before creating anything check if user exists in database
             const { name, currentUser } = req.body;
             if (!name || !currentUser)
                 throw new BadRequestError(
                     'user not authorized or skill name not provided'
                 );
-            const dbStatus = databaseStatus.active;
+            const dbStatus = skillActiveStatus.active;
             const userId = new ObjectId(currentUser.id);
             // check if active entries in the db already have skill with this name
             const existingSkill = await Skills.getSkillByNameAndUserId(
@@ -101,19 +102,21 @@ router.post(
                 dbStatus
             });
             if (!skillDoc) throw new DatabaseErrors('unable to create skill');
-            if (!skillDoc.name || !skillDoc.version || !skillDoc.userId)
+            if (
+                !skillDoc.name ||
+                !skillDoc.version ||
+                !skillDoc.userId ||
+                !skillDoc.dbStatus
+            )
                 throw new Error(
-                    'we need skill name to publish skill:created event'
+                    'skill name, version and userId needed to publish skill:created event'
                 );
             const userToJSON = userId.toJSON();
-            // check of skillDoc.course exits. convert every value of course id to JSON
-            const courseToJSON = skillDoc.course?.length
-                ? skillDoc.course.map((id) => {
+            // check of skillDoc.resourceId exits. convert every value of resource id to JSON
+            const resourceToJSON = skillDoc.resourceId?.length
+                ? skillDoc.resourceId.map((id) => {
                       return id.toJSON();
                   })
-                : undefined;
-            const bookToJSON = skillDoc.book
-                ? skillDoc.book.toJSON()
                 : undefined;
             // publish skillCreatedEvent
             await new skillCreatedPublisher(natsWrapper.client).publish({
@@ -121,8 +124,8 @@ router.post(
                 userId: userToJSON,
                 name: skillDoc.name,
                 version: skillDoc.version,
-                course: courseToJSON,
-                book: bookToJSON
+                resourceId: resourceToJSON,
+                dbStatus: skillDoc.dbStatus
             });
             res.status(201).send({ data: [skillDoc] });
         } catch (err) {
@@ -142,11 +145,11 @@ router.get(
     ) => {
         try {
             const { currentUser } = req.body;
-            if (!currentUser) throw new BadRequestError('user not loggedIn');
+            if (!currentUser) throw new BadRequestError('user not authorised');
             const userId = new ObjectId(currentUser.id);
             const skills = await Skills.getAllSkillsbyUserId(
                 userId,
-                databaseStatus.active
+                skillActiveStatus.active
             );
             res.status(200).send({ data: skills });
         } catch (err) {
@@ -202,25 +205,29 @@ router.post(
 
             // publish event
             if (skillDeleted) {
-                if (!skill.version || !skill.name || !skill.userId)
+                if (
+                    !skill.version ||
+                    !skill.name ||
+                    !skill.userId ||
+                    !skill.dbStatus
+                )
                     throw new Error(
                         'version dbStatus and name are needed to update record'
                     );
                 const userToJSON = userId.toJSON();
-                const courseToJSON = skill.course?.length
-                    ? skill.course.map((id) => {
+                const resourceToJSON = skill.resourceId?.length
+                    ? skill.resourceId.map((id) => {
                           return id.toJSON();
                       })
                     : undefined;
-                const bookToJSON = skill.book ? skill.book.toJSON() : undefined;
 
                 await new skillDeletedPublisher(natsWrapper.client).publish({
                     _id: skill._id.toString(),
                     userId: userToJSON,
                     name: skill.name,
                     version: skill.version,
-                    course: courseToJSON,
-                    book: bookToJSON
+                    resourceId: resourceToJSON,
+                    dbStatus: skill.dbStatus
                 });
             }
             res.status(202).send({ data: skillDeleted });
@@ -245,7 +252,7 @@ router.post(
                     'please provide id and name to update skill'
                 );
             const userId = new ObjectId(currentUser.id);
-            const dbStatus = databaseStatus.active;
+            const dbStatus = skillActiveStatus.active;
             const existingSkill = await Skills.getSkillByNameAndUserId(
                 name,
                 dbStatus,
@@ -281,26 +288,28 @@ router.post(
                 newVersion
             );
             if (skillDoc) {
-                if (!skillDoc.version || !skillDoc.name || !skill.userId)
+                if (
+                    !skillDoc.version ||
+                    !skillDoc.name ||
+                    !skill.userId ||
+                    !skill.dbStatus
+                )
                     throw new Error(
                         'we need skill database doc details to publish this event'
                     );
                 const userToJSON = skill.userId.toJSON();
-                const courseToJSON = skillDoc.course?.length
-                    ? skillDoc.course.map((id) => {
+                const resourceToJSON = skillDoc.resourceId?.length
+                    ? skillDoc.resourceId.map((id) => {
                           return id.toJSON();
                       })
-                    : undefined;
-                const bookToJSON = skillDoc.book
-                    ? skillDoc.book.toJSON()
                     : undefined;
                 await new skillUpdatedPublisher(natsWrapper.client).publish({
                     _id: skillDoc._id.toString(),
                     userId: userToJSON,
                     name: skillDoc.name,
                     version: skillDoc.version,
-                    course: courseToJSON,
-                    book: bookToJSON
+                    resourceId: resourceToJSON,
+                    dbStatus: skill.dbStatus
                 });
             }
 
