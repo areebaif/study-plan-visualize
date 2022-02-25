@@ -32,7 +32,7 @@ spec:
             - name: MONGO_DB_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
-                  name: course-mongodb-uri
+                  name: resource-mongodb-uri
                   key: URI
             - name: JWT
               valueFrom:

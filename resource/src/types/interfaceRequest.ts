@@ -1,16 +1,15 @@
 import { Request } from 'express';
+import { UserPayload } from '@ai-common-modules/auth';
 
-export interface AddCourse {
-    courseName: string | undefined;
-    courseURL: string | undefined;
-    learningStatus: number | undefined;
-    skills?: { id: string; name: string }[];
-    languages?: { id: string; name: string }[];
-    courseId?: string;
-}
-
-export interface StringBody {
-    [key: string]: string | undefined;
+export interface AddResource {
+    id?: string;
+    name: string;
+    type: string | undefined;
+    learningStatus: number;
+    version: number;
+    description?: string;
+    skillId?: string[];
+    currentUser?: UserPayload | undefined;
 }
 
 export interface CustomRequest<T> extends Request {

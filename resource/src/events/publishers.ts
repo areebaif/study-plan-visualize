@@ -1,19 +1,19 @@
 import {
     Publisher,
     Subjects,
-    courseCreatedEvent,
-    courseDeletedEvent,
-    courseUpdatedEvent
+    ResourceCreatedEvent,
+    ResourceDeletedEvent,
+    ResourceUpdatedEvent
 } from '@ai-common-modules/events';
 
-export class CourseCreatedPublisher extends Publisher<courseCreatedEvent> {
-    readonly subject = Subjects.CourseCreated;
+export class ResourceCreatedPublisher extends Publisher<ResourceCreatedEvent> {
+    readonly subject = Subjects.ResourceCreated;
 }
 
-export class CourseDeletedPublisher extends Publisher<courseDeletedEvent> {
-    readonly subject = Subjects.CourseDeleted;
+export class ResourceDeletedPublisher extends Publisher<ResourceDeletedEvent> {
+    readonly subject = Subjects.ResourceDeleted;
 }
 
-export class CourseUpdatedPublisher extends Publisher<courseUpdatedEvent> {
-    readonly subject = Subjects.CourseUpdated;
+export class ResourceUpdatedPublisher extends Publisher<ResourceUpdatedEvent> {
+    readonly subject = Subjects.ResourceUpdated;
 }

@@ -10,30 +10,30 @@ import { connectDb } from '../services/mongodb';
 
 import { logErrorMessage } from '../errors/customError';
 import { DatabaseErrors } from '../errors/databaseErrors';
-import { courseRouter } from '../routes/course';
 
 interface returnSkillDocument {
     _id?: ObjectId;
+    userId?: ObjectId;
     name?: string;
-    course?: ObjectId[];
-    book?: ObjectId;
     version?: number;
+    resourceId?: ObjectId[] | undefined;
 }
 
 interface insertSkillDocument {
-    _id?: ObjectId;
+    _id: ObjectId;
+    userId: ObjectId;
     name: string;
-    course?: ObjectId[];
-    book?: ObjectId;
     version: number;
+    resourceId?: ObjectId[] | undefined;
 }
 
 export class Skills {
+    static collectionName = 'skill';
     static async insertSkill(skillProps: insertSkillDocument) {
         try {
             const db = await connectDb();
             const { acknowledged, insertedId }: InsertOneResult = await db
-                .collection('skills')
+                .collection(Skills.collectionName)
                 .insertOne(skillProps);
             if (!acknowledged)
                 throw new DatabaseErrors('unable to insert skill ');
@@ -51,15 +51,15 @@ export class Skills {
         try {
             const db = await connectDb();
             const result: WithId<returnSkillDocument>[] = await db
-                .collection('skills')
-                // you only want to return user password in case you are doing a password check
+                .collection(Skills.collectionName)
                 .find({ _id })
                 .toArray();
             if (!result.length)
                 throw new DatabaseErrors(
                     'Unable to retrieve skill from database'
                 );
-            return result;
+            const document = result[0];
+            return document;
         } catch (err) {
             logErrorMessage(err);
             throw new DatabaseErrors('Unable to retrieve skill from database');
@@ -70,8 +70,7 @@ export class Skills {
         try {
             const db = await connectDb();
             const result: WithId<returnSkillDocument>[] = await db
-                .collection('skills')
-                // you only want to return user password in case you are doing a password check
+                .collection(Skills.collectionName)
                 .find({ $and: [{ _id: _id }, { version: version }] })
                 .toArray();
             if (!result.length)
@@ -86,13 +85,13 @@ export class Skills {
         }
     }
 
-    static async findSkillByIdAndName(_id: ObjectId, name: string) {
+    static async findSkillByUserIdAndName(userId: ObjectId, name: string) {
         try {
             const db = await connectDb();
             const result: WithId<returnSkillDocument>[] = await db
-                .collection('skills')
+                .collection(Skills.collectionName)
                 // you only want to return user password in case you are doing a password check
-                .find({ $and: [{ _id: _id }, { name: name }] })
+                .find({ $and: [{ userId: userId }, { name: name }] })
                 .toArray();
             if (!result.length)
                 throw new DatabaseErrors(
@@ -110,8 +109,7 @@ export class Skills {
         try {
             const db = await connectDb();
             const result: DeleteResult = await db
-                .collection('skills')
-                /// when we delete we dont remove database entry we just change the status to inactive
+                .collection(Skills.collectionName)
                 .deleteOne({ _id });
             return result.acknowledged;
         } catch (err) {
@@ -119,26 +117,25 @@ export class Skills {
             throw new DatabaseErrors('Unable to retrieve skill from database');
         }
     }
-
     static async updateSkill(updateProps: {
         _id: ObjectId;
         name: string;
         version: number;
-        course: ObjectId[] | undefined;
+        resourceId?: ObjectId[] | undefined;
     }) {
         try {
             const db = await connectDb();
-            const { _id, name, version, course } = updateProps;
+            const { _id, name, version, resourceId } = updateProps;
 
             const result: UpdateResult = await db
-                .collection('skills')
+                .collection(Skills.collectionName)
                 .updateOne(
                     { _id },
                     {
                         $set: {
                             name: name,
                             version: version,
-                            course: course
+                            resourceId: resourceId
                         }
                     }
                 );
