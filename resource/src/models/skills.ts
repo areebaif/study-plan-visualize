@@ -58,7 +58,8 @@ export class Skills {
                 throw new DatabaseErrors(
                     'Unable to retrieve skill from database'
                 );
-            return result;
+            const document = result[0];
+            return document;
         } catch (err) {
             logErrorMessage(err);
             throw new DatabaseErrors('Unable to retrieve skill from database');

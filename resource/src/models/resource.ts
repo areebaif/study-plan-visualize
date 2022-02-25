@@ -170,7 +170,6 @@ export class Resource {
     }
     static async updateResource(updateProps: {
         _id: ObjectId;
-        userId: ObjectId;
         name: string;
         type: string | undefined;
         learningStatus: number;
@@ -182,7 +181,6 @@ export class Resource {
             const db = await connectDb();
             const {
                 _id,
-                userId,
                 name,
                 type,
                 learningStatus,
@@ -206,7 +204,6 @@ export class Resource {
                     {
                         $set: {
                             name: name,
-                            userId: userId,
                             type: type,
                             learningStatus: learningStatus,
                             version: version,

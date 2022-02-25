@@ -13,12 +13,9 @@ import {
     SkillCreatedListner,
     SkillUpdatedListner,
     skillDeletedListener
-    // ProgrammingLngCreatedListner,
-    // ProgrammingLngUpdatedListner,
-    // ProgrammingLngDeletedListener
 } from './events/listeners';
 import { connectDb } from './services/mongodb';
-import { courseRouter } from './routes/course';
+import { resourceRouter } from './routes/resource';
 import { errorHandler } from './middlewares/errorHandler';
 import swaggerDocument from './swagger/course-api.json';
 
@@ -61,9 +58,6 @@ const startServer = async () => {
         new SkillCreatedListner(natsWrapper.client).listen();
         new SkillUpdatedListner(natsWrapper.client).listen();
         new skillDeletedListener(natsWrapper.client).listen();
-        // new ProgrammingLngCreatedListner(natsWrapper.client).listen();
-        // new ProgrammingLngUpdatedListner(natsWrapper.client).listen();
-        // new ProgrammingLngDeletedListener(natsWrapper.client).listen();
 
         // connect to db
         await connectDb();
@@ -84,7 +78,7 @@ const startServer = async () => {
             swaggerUi.serve,
             swaggerUi.setup(swaggerDocument)
         );
-        app.use(courseRouter);
+        app.use(resourceRouter);
 
         // error-handler
         app.use(errorHandler);

@@ -1,9 +1,9 @@
 import { Request } from 'express';
 import { ObjectId } from 'mongodb';
-import { currentUser, UserPayload } from '@ai-common-modules/auth';
+import { UserPayload } from '@ai-common-modules/auth';
 
 export interface BodyProps {
-    id: ObjectId;
+    id: string;
     name: string;
     currentUser?: UserPayload | undefined;
 }

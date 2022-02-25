@@ -2,6 +2,7 @@ import express, { NextFunction, Response, Request } from 'express';
 import { ObjectId } from 'mongodb';
 import { natsWrapper } from '../nats-wrapper';
 import { skillActiveStatus } from '@ai-common-modules/events';
+import { currentUser } from '@ai-common-modules/auth';
 import {
     skillCreatedPublisher,
     skillDeletedPublisher,
@@ -70,6 +71,7 @@ const router = express.Router();
 // create
 router.post(
     '/api/skills/add',
+    currentUser,
     async (
         req: CustomRequest<BodyProps>,
         res: Response,
@@ -138,6 +140,7 @@ router.post(
 // get all skills
 router.get(
     '/api/skills/all',
+    currentUser,
     async (
         req: CustomRequest<BodyProps>,
         res: Response,
@@ -161,6 +164,7 @@ router.get(
 
 router.get(
     '/api/skills/:id',
+    currentUser,
     async (
         req: CustomRequest<BodyProps>,
         res: Response,
@@ -183,6 +187,7 @@ router.get(
 // delete skills
 router.post(
     '/api/skills/destroy',
+    currentUser,
     async (
         req: CustomRequest<BodyProps>,
         res: Response,
@@ -240,6 +245,7 @@ router.post(
 
 router.post(
     '/api/skills/update',
+    currentUser,
     async (
         req: CustomRequest<BodyProps>,
         res: Response,
