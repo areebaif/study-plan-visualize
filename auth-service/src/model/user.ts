@@ -1,36 +1,34 @@
-import { ObjectId } from "mongodb";
+import { ObjectId, WithId } from "mongodb";
 
 import { connectDb } from "../services/mongodb";
 // TODO: convert them into one import
 import { logErrorMessage } from "../errors/customError";
 import { DatabaseErrors } from "../errors/databaseErrors";
 
-type userDocument = {
+interface UserDocument {
   _id: ObjectId;
   email: string;
   password: string;
-};
-
+}
+interface ReturnUserProps {
+  _id?: ObjectId;
+  email?: string;
+  password?: string;
+}
 type showPasswordField = {
   password: boolean;
 };
 
 export class User {
-  constructor(private data: userDocument) {}
-
   static collectionName = "users";
 
-  static async insertUser(
-    userProps: userDocument
-  ): Promise<userDocument[] | undefined> {
+  static async insertUser(userProps: UserDocument) {
     try {
-      const user = new User(userProps);
-      const { data } = user;
-      const { email } = data;
+      const { email } = userProps;
       const db = await connectDb();
       const insertUser = await db
         .collection(User.collectionName)
-        .insertOne(data);
+        .insertOne(userProps);
       const userCreated = await User.userByEmail(email);
       return userCreated;
     } catch (err) {
@@ -41,13 +39,10 @@ export class User {
     }
   }
 
-  static async userByEmail(
-    email: string,
-    options?: showPasswordField
-  ): Promise<userDocument[] | undefined> {
+  static async userByEmail(email: string, options?: showPasswordField) {
     try {
       const db = await connectDb();
-      const result: userDocument[] = await db
+      const result: WithId<ReturnUserProps>[] = await db
         .collection(User.collectionName)
         // you only want to return user password in case you are doing a password check
         .find({ email }, { projection: options })
@@ -60,7 +55,7 @@ export class User {
       throw new DatabaseErrors("Unable to retrieve user from database");
     }
   }
-  static normalizeUserProps(userAttrs: userDocument): {
+  static normalizeUserProps(userAttrs: ReturnUserProps): {
     email: string;
     id: string;
   } {

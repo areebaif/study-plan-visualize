@@ -81,6 +81,7 @@ router.post(
       // compare database password to supplied password
       const [user] = existingUser;
       const storedPassword = user.password;
+      if (!storedPassword) throw new Error("no password found in database");
       const passwordMatch = await PasswordManager.compare(
         storedPassword,
         password

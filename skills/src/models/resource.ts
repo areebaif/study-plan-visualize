@@ -106,7 +106,14 @@ export class Resource {
                 version,
                 skillId
             } = updateProps;
-
+            const existingVersion = await Resource.getResourceByIdAndVersion(
+                _id,
+                version - 1
+            );
+            if (!existingVersion)
+                throw new DatabaseErrors(
+                    'we cannot update since the version of the record is not correct'
+                );
             const result: UpdateResult = await db
                 .collection('resource')
                 .updateOne(
@@ -125,7 +132,9 @@ export class Resource {
             return result.modifiedCount === 1;
         } catch (err) {
             logErrorMessage(err);
-            throw new DatabaseErrors('Unable to update resource in database');
+            throw new DatabaseErrors(
+                'update operation failed either document version not correct or something has gone wrong'
+            );
         }
     }
 

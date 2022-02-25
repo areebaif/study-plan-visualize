@@ -15,8 +15,7 @@ import { BadRequestError } from '../errors/badRequestError';
 import { logErrorMessage } from '../errors/customError';
 import { DatabaseErrors } from '../errors/databaseErrors';
 import { Skills } from '../models/skills';
-import { ProgrammingLng } from '../models/programmingLng';
-import { Course } from '../models/course';
+import { Course } from '../models/resource';
 
 const router = express.Router();
 // TODO: add auth, fix publishing
