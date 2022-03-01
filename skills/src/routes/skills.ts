@@ -79,10 +79,8 @@ router.post(
     ) => {
         try {
             // TODO: before creating anything check if user exists in database
-            const { name, currentUser } = req.body;
-            console.log('session', req.session);
-            console.log('currentUser', req.currentUser);
-            console.log(req.body);
+            const { name } = req.body;
+            const { currentUser } = req;
             if (!name || !currentUser)
                 throw new BadRequestError(
                     'user not authorized or skill name not provided'
@@ -150,7 +148,7 @@ router.get(
         next: NextFunction
     ) => {
         try {
-            const { currentUser } = req.body;
+            const { currentUser } = req;
             if (!currentUser) throw new BadRequestError('user not authorised');
             const userId = new ObjectId(currentUser.id);
             const skills = await Skills.getAllSkillsbyUserId(
@@ -175,7 +173,7 @@ router.get(
     ) => {
         try {
             const { id } = req.params;
-            const { currentUser } = req.body;
+            const { currentUser } = req;
             if (!currentUser) throw new BadRequestError('user not loggedIn');
             const _id = new ObjectId(id);
             const skill = await Skills.getSkillById(_id);
@@ -197,7 +195,8 @@ router.post(
         next: NextFunction
     ) => {
         try {
-            const { id, currentUser } = req.body;
+            const { id } = req.body;
+            const { currentUser } = req;
             if (!id || !currentUser)
                 throw new BadRequestError(
                     'please provide id to delete skill or user not authorised'
@@ -255,7 +254,8 @@ router.post(
         next: NextFunction
     ) => {
         try {
-            const { id, name, currentUser } = req.body;
+            const { id, name } = req.body;
+            const { currentUser } = req;
             if (!id || !name || !currentUser)
                 throw new BadRequestError(
                     'please provide id and name to update skill'
