@@ -80,6 +80,9 @@ router.post(
         try {
             // TODO: before creating anything check if user exists in database
             const { name, currentUser } = req.body;
+            console.log('session', req.session);
+            console.log('currentUser', req.currentUser);
+            console.log(req.body);
             if (!name || !currentUser)
                 throw new BadRequestError(
                     'user not authorized or skill name not provided'
