@@ -31,10 +31,7 @@ const startServer = async () => {
       // Hence turn off built-in encryption support as other microservices might not be in node
       signed: false,
       name: "session",
-      //TODO:
-      // this option is valid over HTTPS connection, right now dev environment
-      // this option will send cookie over secure connection
-      //secure: true,
+      secure: process.env.NODE_ENV === "production",
     })
   );
   // api-documentation

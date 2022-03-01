@@ -16,10 +16,15 @@ spec:
         - name: auth
           image: areebaiftikhar/auth:v8
           env:
+            - name: NODE_ENV
+              value: "development"
             - name: PORT
               value: "3000"
             - name: DATABASE
-              value: "mongodb://auth-mongo-srv:27017"
+              valueFrom:
+                secretKeyRef:
+                  name: auth-mongodb-uri
+                  key: URI
             - name: JWT
               valueFrom:
                 secretKeyRef:
