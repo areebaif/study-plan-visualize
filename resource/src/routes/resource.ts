@@ -27,18 +27,14 @@ router.post(
         next: NextFunction
     ) => {
         try {
-            const {
-                name,
-                type,
-                learningStatus,
-                description,
-                skillId,
-                currentUser
-            } = req.body;
+            const { name, type, learningStatus, description, skillId } =
+                req.body;
+            const { currentUser } = req;
             if (!name || !type || !learningStatus || !currentUser)
                 throw new BadRequestError(
                     'either user not authorised or resource name, type or learning status not provided'
                 );
+
             if (learningStatus < 0 || learningStatus > 100)
                 throw new BadRequestError(
                     'learnning status must be between 0 and 100'
@@ -129,7 +125,7 @@ router.get(
         next: NextFunction
     ) => {
         try {
-            const { currentUser } = req.body;
+            const { currentUser } = req;
             if (!currentUser) throw new BadRequestError('user not authroised');
             const userId = new ObjectId(currentUser.id);
             const dbStatus = resourceActiveStatus.active;
@@ -155,7 +151,7 @@ router.get(
     ) => {
         try {
             const { id } = req.params;
-            const { currentUser } = req.body;
+            const { currentUser } = req;
             if (!currentUser) throw new BadRequestError('user not authroised');
             const _id = new ObjectId(id);
             const resource = await Resource.resourceById(_id);
@@ -177,7 +173,8 @@ router.post(
         next: NextFunction
     ) => {
         try {
-            const { id, currentUser } = req.body;
+            const { id } = req.body;
+            const { currentUser } = req;
             if (!id || !currentUser)
                 throw new BadRequestError(
                     'either user not authorised or no id provided to delete resource'
@@ -239,15 +236,9 @@ router.post(
         next: NextFunction
     ) => {
         try {
-            const {
-                id,
-                name,
-                type,
-                learningStatus,
-                description,
-                skillId,
-                currentUser
-            } = req.body;
+            const { id, name, type, learningStatus, description, skillId } =
+                req.body;
+            const { currentUser } = req;
             if (!name || !type || !learningStatus || !currentUser || !id)
                 throw new BadRequestError(
                     'either user not authorised or resource name, type or learning status not provided'
