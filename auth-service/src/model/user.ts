@@ -1,7 +1,6 @@
 import { ObjectId, WithId, DeleteResult } from "mongodb";
 
 import { connectDb } from "../services/mongodb";
-// TODO: convert them into one import
 import { logErrorMessage } from "../errors/customError";
 import { DatabaseErrors } from "../errors/databaseErrors";
 
