@@ -1,7 +1,6 @@
-import { ObjectId, WithId } from "mongodb";
+import { ObjectId, WithId, DeleteResult } from "mongodb";
 
 import { connectDb } from "../services/mongodb";
-// TODO: convert them into one import
 import { logErrorMessage } from "../errors/customError";
 import { DatabaseErrors } from "../errors/databaseErrors";
 
@@ -36,6 +35,19 @@ export class User {
       throw new DatabaseErrors(
         "Unable to create user in database either email in use or database operation failed"
       );
+    }
+  }
+
+  static async deleteUser(id: ObjectId) {
+    try {
+      const db = await connectDb();
+      const result: DeleteResult = await db
+        .collection(User.collectionName)
+        .deleteOne({ id });
+      return result.acknowledged;
+    } catch (err) {
+      logErrorMessage(err);
+      throw new DatabaseErrors("Unable to delete user in the databse");
     }
   }
 
