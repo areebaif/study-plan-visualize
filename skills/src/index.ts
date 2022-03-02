@@ -11,10 +11,11 @@ import {
     ResourceUpdatedListner,
     ResourceDeletedListner
 } from './events/listeners';
+import { Express } from 'express';
 
 const PORT = process.env.PORT || 4000;
 
-const startServer = async () => {
+const startServer = async (app: Express) => {
     try {
         // check if environment variable exists
         if (
@@ -59,4 +60,4 @@ const startServer = async () => {
     }
 };
 
-startServer();
+startServer(app);

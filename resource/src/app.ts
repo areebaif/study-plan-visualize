@@ -1,12 +1,11 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import swaggerUi from 'swagger-ui-express';
-import cookieSession from 'cookie-session';
 import swaggerJSDoc from 'swagger-jsdoc';
-
-import { skillRouter } from './routes/skills';
+import cookieSession from 'cookie-session';
+import { resourceRouter } from './routes/resource';
 import { errorHandler } from './middlewares/errorHandler';
-import swaggerDocument from './swagger/skill-api.json';
+import swaggerDocument from './swagger/course-api.json';
 
 const app = express();
 app.set('trust proxy', true);
@@ -18,17 +17,16 @@ app.use(
         secure: process.env.NODE_ENV === 'production'
     })
 );
-
 //middleware
 app.use(bodyParser.json());
 
-//api-documentation
+// api-documentation
 app.use(
-    '/api/skills/skill-docs',
+    '/api/course/course-docs',
     swaggerUi.serve,
     swaggerUi.setup(swaggerDocument)
 );
-app.use(skillRouter);
+app.use(resourceRouter);
 
 // error-handler
 app.use(errorHandler);
