@@ -129,4 +129,19 @@ router.post(
   }
 );
 
+router.post(
+  "/api/users/destroy",
+  async (req: ReqAnnotateBodyString, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.body;
+      const parsedId = new ObjectId(id);
+      const deleteUser = await User.deleteUser(parsedId);
+      res.status(201).send({ data: deleteUser });
+    } catch (err) {
+      logErrorMessage(err);
+      next(err);
+    }
+  }
+);
+
 export { router as authRouter };
