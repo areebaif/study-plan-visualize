@@ -27,7 +27,7 @@ describe('add a skill route and functionality', () => {
             .expect(400);
     });
 
-    test('returns a 400 if no name provided', async () => {
+    test('returns a 400 if no skill name provided', async () => {
         await request(app).post('/api/skills/add').send({}).expect(400);
     });
 
