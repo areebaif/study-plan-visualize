@@ -2,14 +2,23 @@ import request from 'supertest';
 import { returnSkillDocument } from '../../models/skills';
 import { natsWrapper } from '../../nats-wrapper';
 import { app } from '../../app';
+// TODO: how to make user loggedIn
 
-describe('add a skill route and functionality', () => {
+describe('add a skill functionality', () => {
     test('returns a 201 on succesful skill creation', async () => {
         const data = {
             name: 'test'
         };
 
         return request(app).post('/api/skills/add').send(data).expect(201);
+    });
+    // TODO: we need userId
+    test('skill can only be added if a user is signed in', async () => {
+        const data = {
+            name: 'test'
+        };
+
+        return request(app).post('/api/skills/add').send(data).expect(400);
     });
 
     test('disallows duplicats skill name', async () => {
@@ -42,7 +51,7 @@ describe('add a skill route and functionality', () => {
     });
 });
 
-describe('get all skills route and functionality', () => {
+describe('get all skills functionality', () => {
     test('returns a 200 when fetching all skills', async () => {
         const data = {
             name: 'test'
@@ -53,7 +62,7 @@ describe('get all skills route and functionality', () => {
     });
 });
 
-describe('get a single skill by id route and functionality', () => {
+describe('get a single skill by id functionality', () => {
     test('returns a 200 if a skill is found', async () => {
         // create a skill
         const testSkill = {
@@ -81,7 +90,7 @@ describe('get a single skill by id route and functionality', () => {
     });
 });
 
-describe('delete a skill route and functionality', () => {
+describe('delete a skill functionality', () => {
     test('returns a 202 if a skill is deleted', async () => {
         const testSkill = {
             name: 'test'
@@ -139,7 +148,7 @@ describe('delete a skill route and functionality', () => {
     });
 });
 
-describe('update a skill route and functionality', () => {
+describe('update a skill functionality', () => {
     test('returns a 400 if the provided mongoId does not exist', async () => {
         const fakeData = {
             ticketId: 'testMongoObjectId',
