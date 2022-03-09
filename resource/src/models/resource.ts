@@ -11,7 +11,7 @@ import { connectDb } from '../services/mongodb';
 import { logErrorMessage } from '../errors/customError';
 import { DatabaseErrors } from '../errors/databaseErrors';
 
-interface returnResourceDocument {
+export interface returnResourceDocument {
     _id?: ObjectId;
     userId?: ObjectId;
     name?: string;
@@ -23,7 +23,7 @@ interface returnResourceDocument {
     dbStatus?: resourceActiveStatus;
 }
 
-interface insertResourceDocument {
+export interface insertResourceDocument {
     _id?: ObjectId;
     userId: ObjectId;
     name: string;

@@ -1,6 +1,6 @@
 //TODO: fix this file
 import request from 'supertest';
-import { returnSkillDocument } from '../../models/skills';
+import { returnResourceDocument } from '../../models/resource';
 import { natsWrapper } from '../../../nats-wrapper';
 
 import { app } from '../../app';
@@ -77,7 +77,7 @@ describe('get a single skill by id functionality', () => {
 
         // get a skill from database
         const { data } = response.body;
-        const document: returnSkillDocument = data[0];
+        const document: returnResourceDocument = data[0];
 
         const skillResponse = await request(app)
             .get(`/api/skills/${document._id}`)
@@ -104,7 +104,7 @@ describe('delete a skill functionality', () => {
             .expect(201);
 
         const { data } = response.body;
-        const document: returnSkillDocument = data[0];
+        const document: returnResourceDocument = data[0];
         const id = document._id;
         const deleteData = {
             id: id
@@ -136,7 +136,7 @@ describe('delete a skill functionality', () => {
             .expect(201);
 
         const { data } = response.body;
-        const document: returnSkillDocument = data[0];
+        const document: returnResourceDocument = data[0];
         const id = document._id;
         const deleteData = {
             id: id
@@ -197,7 +197,7 @@ describe('update a skill functionality', () => {
 
         // get a skill from database
         const { data } = response.body;
-        const document: returnSkillDocument = data[0];
+        const document: returnResourceDocument = data[0];
         const id = document._id;
         const updateData = {
             id: id,
@@ -222,7 +222,7 @@ describe('update a skill functionality', () => {
 
         // get a skill from database
         const { data } = response.body;
-        const document: returnSkillDocument = data[0];
+        const document: returnResourceDocument = data[0];
 
         const updateData = {
             id: document._id,
@@ -247,7 +247,7 @@ describe('update a skill functionality', () => {
 
         // get a skill from database
         const { data } = response.body;
-        const document: returnSkillDocument = data[0];
+        const document: returnResourceDocument = data[0];
 
         const updateData = {
             id: document._id,
