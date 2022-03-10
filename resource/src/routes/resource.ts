@@ -1,7 +1,7 @@
 import express, { NextFunction, Response, Request } from 'express';
 import { ObjectId } from 'mongodb';
 import { natsWrapper } from '../../nats-wrapper';
-import { currentUser } from '@ai-common-modules/auth';
+import { currentUser } from '../middlewares/currentUser';
 
 import { CustomRequest, AddResource } from '../types/interfaceRequest';
 import {
