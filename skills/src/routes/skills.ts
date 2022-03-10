@@ -1,8 +1,9 @@
 import express, { NextFunction, Response, Request } from 'express';
 import { ObjectId } from 'mongodb';
 import { natsWrapper } from '../nats-wrapper';
+import jwt from 'jsonwebtoken';
 import { skillActiveStatus } from '@ai-common-modules/events';
-import { currentUser } from '@ai-common-modules/auth';
+import { currentUser } from '../middlewares/currentUser';
 import {
     skillCreatedPublisher,
     skillDeletedPublisher,
@@ -67,7 +68,11 @@ const router = express.Router();
 //         }
 //     }
 // );
-
+interface UserPayload {
+    id: string;
+    email: string;
+}
+const jwtKey = process.env.JWT_KEY!;
 // create
 router.post(
     '/api/skills/add',
