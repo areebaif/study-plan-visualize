@@ -12,7 +12,7 @@ let db: any;
 jest.mock('../nats-wrapper');
 
 declare global {
-    function signin(): Promise<string>;
+    function signin(): string[];
 }
 
 beforeAll(async () => {
@@ -37,7 +37,7 @@ afterAll(async () => {
     await mongo.stop();
 });
 
-global.signin = async () => {
+global.signin = () => {
     // Build a JWT payload.  { id, email }
     const payload = {
         id: '134hefbhbf',
@@ -57,5 +57,5 @@ global.signin = async () => {
     const base64 = Buffer.from(sessionJSON).toString('base64');
 
     // return a string thats the cookie with the encoded data
-    return `express:sess=${base64}`;
+    return [`express:sess=${base64}`];
 };

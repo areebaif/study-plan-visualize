@@ -1,8 +1,7 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { Db, MongoClient } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import jwt from 'jsonwebtoken';
 
-import { app } from '../app';
 import { connectDb, mongoDBClient } from '../services/mongodb';
 
 let mongo: any;
@@ -12,10 +11,11 @@ let db: any;
 jest.mock('../nats-wrapper');
 
 declare global {
-    function signin(): Promise<string>;
+    function signin(): string[];
 }
 
 beforeAll(async () => {
+    jest.resetModules();
     process.env.JWT_KEY = 'asdfasdf';
     mongo = await MongoMemoryServer.create();
     const mongoUri = mongo.getUri();
@@ -37,10 +37,11 @@ afterAll(async () => {
     await mongo.stop();
 });
 
-global.signin = async () => {
+global.signin = () => {
     // Build a JWT payload.  { id, email }
+    const userId = new ObjectId();
     const payload = {
-        id: '134hefbhbf',
+        id: userId,
         email: 'test@test.com'
     };
 
@@ -57,5 +58,5 @@ global.signin = async () => {
     const base64 = Buffer.from(sessionJSON).toString('base64');
 
     // return a string thats the cookie with the encoded data
-    return `express:sess=${base64}`;
+    return [`session=${base64}`];
 };
