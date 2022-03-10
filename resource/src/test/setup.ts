@@ -1,5 +1,5 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { Db, MongoClient } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import jwt from 'jsonwebtoken';
 
 import { app } from '../app';
@@ -39,8 +39,9 @@ afterAll(async () => {
 
 global.signin = () => {
     // Build a JWT payload.  { id, email }
+    const userId = new ObjectId();
     const payload = {
-        id: '134hefbhbf',
+        id: userId,
         email: 'test@test.com'
     };
 
@@ -57,5 +58,5 @@ global.signin = () => {
     const base64 = Buffer.from(sessionJSON).toString('base64');
 
     // return a string thats the cookie with the encoded data
-    return [`express:sess=${base64}`];
+    return [`session=${base64}`];
 };
