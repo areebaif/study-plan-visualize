@@ -3,7 +3,6 @@ import { returnSkillDocument } from '../../models/skills';
 import { natsWrapper } from '../../nats-wrapper';
 import { app } from '../../app';
 import cookieSession from 'cookie-session';
-// TODO: how to make user loggedIn
 
 describe('add a skill functionality', () => {
     // test('returns a 201 on succesful skill creation', async () => {
@@ -18,7 +17,6 @@ describe('add a skill functionality', () => {
         const data = {
             name: 'test'
         };
-        console.log('env variables', process.env.JWT_KEY);
 
         const response = await request(app)
             .post('/api/skills/add')
