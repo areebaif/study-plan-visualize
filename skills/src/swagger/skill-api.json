@@ -102,64 +102,6 @@
                 }
             }
         },
-        "/api/skills/learning": {
-            "post": {
-                "tags": ["skills"],
-                "summary": "retrieve learning status of a skill database",
-                "operationId": "getStatus",
-                "requestBody": {
-                    "description": "add programming language to the backend",
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "name": {
-                                        "type": "string"
-                                    },
-                                    "id": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "data": {
-                                            "type": "number"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "unsuccesful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "errors": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Errors"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/skills/destroy": {
             "post": {
                 "tags": ["skills"],
@@ -366,6 +308,9 @@
                     "_id": {
                         "type": "string"
                     },
+                    "userId": {
+                        "type": "string"
+                    },
                     "name": {
                         "type": "string"
                     },
@@ -375,19 +320,15 @@
                     "dbStatus": {
                         "type": "string"
                     },
-                    "course": {
-                        "$ref": "#/components/schemas/Course"
-                    },
-                    "books": {
-                        "$ref": "#/components/schemas/Book"
+                    "resourceId": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/resources"
+                        }
                     }
                 }
             },
-            "Course": {
-                "type": "string",
-                "nullable": true
-            },
-            "Book": {
+            "resources": {
                 "type": "string",
                 "nullable": true
             }
