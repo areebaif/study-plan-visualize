@@ -11,11 +11,11 @@
         }
     ],
     "paths": {
-        "/api/course/{id}": {
+        "/api/resource/{id}": {
             "get": {
-                "tags": ["course"],
-                "summary": "get a single course by id",
-                "operationId": "getcourse",
+                "tags": ["resource"],
+                "summary": "get a single resource by id",
+                "operationId": "getResource",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/id"
@@ -31,7 +31,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/CourseData"
+                                                "$ref": "#/components/schemas/Resource"
                                             }
                                         }
                                     }
@@ -59,11 +59,11 @@
                 }
             }
         },
-        "/api/course/all": {
+        "/api/resource/all": {
             "get": {
-                "tags": ["course"],
-                "summary": "retrieve all course from database",
-                "operationId": "getAllCourses",
+                "tags": ["resource"],
+                "summary": "retrieve all resource from database",
+                "operationId": "getAllResource",
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -74,7 +74,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/CourseData"
+                                                "$ref": "#/components/schemas/Resource"
                                             }
                                         }
                                     }
@@ -102,13 +102,13 @@
                 }
             }
         },
-        "/api/course/destroy": {
+        "/api/resource/destroy": {
             "post": {
-                "tags": ["course"],
-                "summary": "delete a course by id",
-                "operationId": "deleteCourse",
+                "tags": ["resource"],
+                "summary": "delete a resource by id",
+                "operationId": "deleteResource",
                 "requestBody": {
-                    "description": "delete course from the backend",
+                    "description": "delete resource from the backend",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -157,38 +157,32 @@
                 }
             }
         },
-        "/api/course/add": {
+        "/api/resource/add": {
             "post": {
-                "tags": ["course"],
-                "summary": "add a course",
-                "operationId": "addCourse",
+                "tags": ["resource"],
+                "summary": "add a resource",
+                "operationId": "addResource",
                 "requestBody": {
-                    "description": "add course to the backend",
+                    "description": "add resource to the backend",
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "properties": {
-                                    "_id": {
-                                        "type": "string"
-                                    },
                                     "name": {
                                         "type": "string"
                                     },
-                                    "courseURL": {
+                                    "type": {
                                         "type": "string"
                                     },
                                     "learningStatus": {
                                         "type": "number"
                                     },
-                                    "languages": {
-                                        "type": "array",
-                                        "nullable": true,
-                                        "items": {
-                                            "$ref": "#/components/schemas/LanguageData"
-                                        }
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
                                     },
-                                    "skills": {
+                                    "skillId": {
                                         "type": "array",
                                         "nullable": true,
                                         "items": {
@@ -210,7 +204,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/CourseData"
+                                                "$ref": "#/components/schemas/Resource"
                                             }
                                         }
                                     }
@@ -238,38 +232,35 @@
                 }
             }
         },
-        "/api/course/update": {
+        "/api/resource/update": {
             "post": {
-                "tags": ["course"],
-                "summary": "edit a course",
-                "operationId": "EditCourse",
+                "tags": ["resource"],
+                "summary": "edit a resource",
+                "operationId": "EditResource",
                 "requestBody": {
-                    "description": "edit course data in the backend",
+                    "description": "edit resource in the backend",
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "properties": {
-                                    "_id": {
+                                    "id": {
                                         "type": "string"
                                     },
                                     "name": {
                                         "type": "string"
                                     },
-                                    "courseURL": {
+                                    "type": {
                                         "type": "string"
                                     },
                                     "learningStatus": {
                                         "type": "number"
                                     },
-                                    "languages": {
-                                        "type": "array",
-                                        "nullable": true,
-                                        "items": {
-                                            "$ref": "#/components/schemas/LanguageData"
-                                        }
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
                                     },
-                                    "skills": {
+                                    "skillId": {
                                         "type": "array",
                                         "nullable": true,
                                         "items": {
@@ -291,7 +282,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/CourseData"
+                                                "$ref": "#/components/schemas/Resource"
                                             }
                                         }
                                     }
@@ -345,23 +336,30 @@
                     }
                 }
             },
-            "CourseData": {
+            "Resource": {
                 "type": "object",
                 "properties": {
                     "_id": {
                         "type": "string"
                     },
+                    "userId": {
+                        "type": "string"
+                    },
                     "name": {
                         "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "learningStatus": {
+                        "type": "number"
                     },
                     "version": {
                         "type": "number"
                     },
-                    "courseURL": {
+                    "description": {
                         "type": "string"
-                    },
-                    "learningStatus": {
-                        "type": "number"
                     },
                     "skillId": {
                         "type": "array",
@@ -369,22 +367,7 @@
                             "type": "string"
                         }
                     },
-                    "languageId": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "LanguageData": {
-                "type": "object",
-                "nullable": true,
-                "properties": {
-                    "_id": {
-                        "type": "string"
-                    },
-                    "name": {
+                    "dbStatus": {
                         "type": "string"
                     }
                 }
@@ -394,9 +377,6 @@
                 "nullable": true,
                 "properties": {
                     "_id": {
-                        "type": "string"
-                    },
-                    "name": {
                         "type": "string"
                     }
                 }
