@@ -83,7 +83,6 @@ router.post(
         next: NextFunction
     ) => {
         try {
-            // TODO: before creating anything check if user exists in database
             const { name } = req.body;
             const { currentUser } = req;
             if (!name || !currentUser)
@@ -182,7 +181,7 @@ router.get(
             if (!currentUser) throw new BadRequestError('user not loggedIn');
             const _id = new ObjectId(id);
             const skill = await Skills.getSkillById(_id);
-            res.status(200).send({ data: skill });
+            res.status(200).send({ data: [skill] });
         } catch (err) {
             logErrorMessage(err);
             next(err);

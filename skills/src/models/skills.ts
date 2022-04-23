@@ -47,7 +47,7 @@ export class Skills {
         name: string,
         dbStatus: skillActiveStatus,
         userId: ObjectId
-    ): Promise<returnSkillDocument[] | undefined> {
+    ) {
         try {
             const db = await connectDb();
             const result: WithId<returnSkillDocument>[] = await db
@@ -68,7 +68,7 @@ export class Skills {
     static async getAllSkillsbyUserId(
         userId: ObjectId,
         dbStatus: skillActiveStatus
-    ): Promise<returnSkillDocument[] | undefined> {
+    ) {
         try {
             const db = await connectDb();
             const result: WithId<returnSkillDocument>[] = await db
