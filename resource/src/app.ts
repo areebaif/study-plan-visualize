@@ -5,7 +5,7 @@ import swaggerJSDoc from 'swagger-jsdoc';
 import cookieSession from 'cookie-session';
 import { resourceRouter } from './routes/resource';
 import { errorHandler } from './middlewares/errorHandler';
-import swaggerDocument from './swagger/course-api.json';
+import swaggerDocument from './swagger/resource-api.json';
 
 const app = express();
 app.set('trust proxy', true);
