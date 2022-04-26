@@ -34,6 +34,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: client-cluster-ip-service
+                name: client-next-srv
                 port:
                   number: 3000
