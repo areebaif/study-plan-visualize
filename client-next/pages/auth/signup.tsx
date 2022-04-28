@@ -1,26 +1,54 @@
 import { useState, FormEvent } from "react";
+import { useRouter } from "next/router";
+import { AuthApiReturnData, ErrorInterface } from "../../types/types";
+import { Errors } from "../../components/Errors";
+import { route } from "next/dist/server/router";
+
+async function fetchData<T>(url: string, method: string, body: string) {
+  const response = await fetch(url, {
+    method: method,
+    body: body,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "same-origin",
+  });
+  const contentType = response.headers.get("content-type");
+  if (!contentType || !contentType.includes("application/json")) {
+    throw new TypeError("something went wrong with the backend request");
+  }
+  const responseObject: T = await response.json();
+  return responseObject;
+}
 
 export default () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<ErrorInterface[] | null>(null);
+  const router = useRouter();
+  const apiUrl = "/api/users/signup";
+  const redirectUrl = "/";
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const data = { email: email, password: password };
-    const url = "/api/users/signup";
+    const data = JSON.stringify({ email: email, password: password });
 
-    const response = await fetch(url, {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "same-origin",
-    });
+    try {
+      setErrors(null);
 
-    const responseObject = await response.json();
-    console.log(responseObject);
+      const response = await fetchData<AuthApiReturnData>(apiUrl, "POST", data);
+
+      if (!response.errors) {
+        router.push(redirectUrl);
+      } else {
+        setErrors(response.errors);
+      }
+    } catch (err) {
+      console.log(err);
+      if (err instanceof Error)
+        setErrors([{ message: "something went wrong" }]);
+    }
   };
   return (
     <form onSubmit={onSubmit}>
@@ -37,6 +65,7 @@ export default () => {
           onChange={(e) => setPassword(e.target.value)}
         />
       </div>
+      {errors && <Errors message={errors} />}
       <button>Signup</button>
     </form>
   );
