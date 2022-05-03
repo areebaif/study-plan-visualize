@@ -9,8 +9,7 @@ export interface AuthDbRow {
 }
 
 export interface AuthApiReturnData {
-  currentUser?: AuthDbRow | null | undefined;
-  data?: AuthDbRow;
+  currentUser?: AuthDbRow | null;
   errors?: Error[];
 }
 
