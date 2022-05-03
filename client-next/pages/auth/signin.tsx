@@ -9,7 +9,7 @@ export default () => {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<ErrorInterface[] | null>(null);
   const router = useRouter();
-  const apiUrl = "/api/users/signup";
+  const apiUrl = "/api/users/signin";
   const redirectUrl = "/";
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -34,7 +34,7 @@ export default () => {
   };
   return (
     <form onSubmit={onSubmit}>
-      <h1>Signup</h1>
+      <h1>Signin</h1>
       <div>
         <label>Email Address</label>
         <input value={email} onChange={(e) => setEmail(e.target.value)}></input>
@@ -48,7 +48,7 @@ export default () => {
         />
       </div>
       {errors && <Errors message={errors} />}
-      <button>Signup</button>
+      <button>Signin</button>
     </form>
   );
 };
