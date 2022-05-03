@@ -1,4 +1,5 @@
 import { ErrorInterface } from "../types/types";
+
 export const Errors = (props: { message: ErrorInterface[] }) => {
   const { message } = props;
   return (
