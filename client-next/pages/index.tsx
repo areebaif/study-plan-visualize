@@ -3,44 +3,20 @@ import type {
   GetServerSideProps,
   GetServerSidePropsContext,
 } from "next";
-import { AuthApiReturnData, AuthDbRow } from "../types/types";
 
-export async function fetchData<T>(
-  url: string,
-  method: string,
-  body?: string,
-  cookie?: string
-) {
-  const isCookie = cookie ? cookie : "";
-  const response = await fetch(url, {
-    method: method,
-    body: body,
-    headers: {
-      "Content-Type": "application/json",
-      cookie: isCookie,
-    },
-    credentials: "same-origin",
-  });
-  const contentType = response.headers.get("content-type");
-  if (!contentType || !contentType.includes("application/json")) {
-    throw new TypeError("something went wrong with the backend request");
-  }
-  const responseObject: T = await response.json();
-  return responseObject;
-}
+import { AuthApiReturnData } from "../types/types";
+import { fetchData } from "../api/fetchData";
 
 const Home: NextPage<{ data: AuthApiReturnData }> = ({ data }) => {
   console.log("hello", data);
 
-  return <h1>Landing Page</h1>;
+  return data.currentUser ? <h1>signed in</h1> : <h1>signed out</h1>;
 };
 
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
 ) => {
   const { req } = context;
-  const headers = req.headers;
-  console.log(req.headers.cookie);
 
   const apiUrl =
     // cross namespace communication in kubernetes requires this syntax to reach a pod in another namespace.
@@ -54,9 +30,7 @@ export const getServerSideProps: GetServerSideProps = async (
     undefined,
     req.headers.cookie
   );
-  console.log("response", response);
 
-  console.log("I was executed");
   // Pass data to the page via props
   return { props: { data: response } };
 };
