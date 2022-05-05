@@ -1,14 +1,9 @@
-import type {
-  NextPage,
-  GetServerSideProps,
-  GetServerSidePropsContext,
-} from "next";
+import type { NextPage } from "next";
 
 import { AuthApiReturnData } from "../types/types";
 import { fetchData } from "../api/fetchData";
 
 const Home: NextPage<{ pageProps: AuthApiReturnData }> = ({ pageProps }) => {
-  console.log("main page!!", pageProps);
   return pageProps?.currentUser ? <h1>signed in</h1> : <h1>signed out</h1>;
 };
 

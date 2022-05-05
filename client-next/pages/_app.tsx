@@ -21,12 +21,18 @@ MyApp.getInitialProps = async (appContext: AppContext) => {
     "http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/api/users/currentuser";
 
   const appProps: AppInitialProps = { pageProps: {} };
-  // await App.getInitialProps(appContext) fills individual pageProps.
-  // so if we are in homepage. Homepage getInitialProps will be called and this will fill appProps.pageProps
-  // which is the same pageprops you see above.
-  const individualPageProps = await App.getInitialProps(appContext);
-  console.log("ind", individualPageProps);
-  // This is statemanagement at app level
+
+  // we have to call individual data fetching functions of each page from this component and pass data down as props to those components
+  let individualPageProps = {};
+  if (appContext.Component.getInitialProps) {
+    // NOTE: this step kind of works like magic because behind the scenes
+    // When you call appContext.Component.getInitialProps, the result of this function call populates individualPageProps.pageProps
+    // despite never making this function call equal to individualPageProps.pageProps
+    individualPageProps = await appContext.Component.getInitialProps(
+      appContext.ctx
+    );
+  }
+  // This is state management at app level
   const appState = await fetchData<AuthApiReturnData>(
     apiUrl,
     "GET",
@@ -35,6 +41,8 @@ MyApp.getInitialProps = async (appContext: AppContext) => {
   );
 
   // We are doing below to combine app level state with individual page props/state
+  // pageProps is the only property through which we can pass data to components.
+  // we can not add properties to appProps, it is a type inside typedefination file of nextjs
   appProps.pageProps = { ...individualPageProps, ...appState };
 
   return { ...appProps };
