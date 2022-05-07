@@ -17,9 +17,6 @@ MyApp.getInitialProps = async (appContext: AppContext) => {
   const { req } = appContext.ctx;
   const api = "/api/users/currentuser";
   const url = typeof window === "undefined" ? serverBaseURL.concat(api) : api;
-  const apiUrl =
-    "http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/api/users/currentuser";
-  console.log("app", url, typeof window);
   const appProps: AppInitialProps = { pageProps: {} };
 
   // we have to call individual data fetching functions of each page from this component and pass data down as props to those components
