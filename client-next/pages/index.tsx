@@ -20,7 +20,6 @@ Home.getInitialProps = async (context) => {
     req?.headers.cookie
   );
   // Pass data to the page via props
-  console.log("indexpage", response);
   return { pageProps: { ...response } };
 };
 export default Home;
