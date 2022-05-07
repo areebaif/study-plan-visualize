@@ -1,7 +1,7 @@
-import App from "next/app";
 import { AppProps, AppInitialProps, AppContext } from "next/app";
 import { AuthApiReturnData } from "../types/types";
 import { fetchData } from "../api/fetchData";
+import { serverBaseURL } from "../api/constant";
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
   console.log("inside app", pageProps);
@@ -15,11 +15,11 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
 
 MyApp.getInitialProps = async (appContext: AppContext) => {
   const { req } = appContext.ctx;
+  const api = "/api/users/currentuser";
+  const url = typeof window === "undefined" ? serverBaseURL.concat(api) : api;
   const apiUrl =
-    // cross namespace communication in kubernetes requires this syntax to reach a pod in another namespace.
-    // We are trying to reach ingress-nginx-controller service in ingress-nginx namespace from our next.js service pod which is defined in default namespace.
     "http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/api/users/currentuser";
-
+  console.log("app", url, typeof window);
   const appProps: AppInitialProps = { pageProps: {} };
 
   // we have to call individual data fetching functions of each page from this component and pass data down as props to those components
@@ -34,7 +34,7 @@ MyApp.getInitialProps = async (appContext: AppContext) => {
   }
   // This is state management at app level
   const appState = await fetchData<AuthApiReturnData>(
-    apiUrl,
+    url,
     "GET",
     undefined,
     req?.headers.cookie

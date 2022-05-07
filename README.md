@@ -13,9 +13,13 @@ Hey! Welcome, this is a microservices app for creating a customised study plan a
 
 ## First Time Setup
 
-Make sure to run the following command for NGINX Ingress Preflight checks:
+1. Make sure to run the following command for NGINX Ingress Preflight checks:
 
 `kubectl get pods --namespace=ingress-nginx`
+
+2. Open your terminal/command line of choice and navigate to the root of the project/infra/k8s folder and run the following command to run ingress service
+
+`kubectl apply -f ingress-serv.yaml`
 
 ### Define Environment Variables
 
