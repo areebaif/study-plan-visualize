@@ -41,12 +41,7 @@ build:
           - "**/*.ts"
           - "**/*.tsx"
           - "**/*.css"
-    # - image: areebaiftikhar/client-study-plan
-    #   context: client
-    #   docker:
-    #     dockerfile: Dockerfile.dev
-    #   sync:
-    #     infer:
-    #       - "**/*.ts"
-    #       - "**/*.tsx"
-    #       - "**/*.css"
+portForward:
+  - resourceType: deployment
+    resourceName: client-depl
+    port: 3000
