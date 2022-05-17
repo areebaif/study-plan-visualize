@@ -1,9 +1,10 @@
 import { Request } from 'express';
 
-export interface ReqAnnotateBodyString extends Request {
-    body: { [key: string]: string | undefined };
+export interface BodyProps {
+    id: string;
+    name: string;
 }
 
-export interface StringBody {
-    [key: string]: string | undefined;
+export interface CustomRequest<T> extends Request {
+    body: T;
 }

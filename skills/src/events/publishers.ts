@@ -1,19 +1,19 @@
 import {
     Publisher,
     Subjects,
-    skillCreatedEvent,
-    skillUpdatedEvent,
-    skillDeletedEvent
+    SkillCreatedEvent,
+    SkillUpdatedEvent,
+    SkillDeletedEvent
 } from '@ai-common-modules/events';
 
-export class skillCreatedPublisher extends Publisher<skillCreatedEvent> {
+export class skillCreatedPublisher extends Publisher<SkillCreatedEvent> {
     readonly subject = Subjects.SkillCreated;
 }
 
-export class skillDeletedPublisher extends Publisher<skillDeletedEvent> {
+export class skillDeletedPublisher extends Publisher<SkillDeletedEvent> {
     readonly subject = Subjects.SkillDeleted;
 }
 
-export class skillUpdatedPublisher extends Publisher<skillUpdatedEvent> {
+export class skillUpdatedPublisher extends Publisher<SkillUpdatedEvent> {
     readonly subject = Subjects.SkillUpdated;
 }

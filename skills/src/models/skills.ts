@@ -1,45 +1,35 @@
-import {
-    DeleteResult,
-    InsertOneResult,
-    ObjectId,
-    UpdateResult,
-    WithId
-} from 'mongodb';
-
+import { InsertOneResult, ObjectId, UpdateResult, WithId } from 'mongodb';
+import { skillActiveStatus } from '@ai-common-modules/events';
 import { connectDb } from '../services/mongodb';
 
 import { logErrorMessage } from '../errors/customError';
 import { DatabaseErrors } from '../errors/databaseErrors';
 
-export enum databaseStatus {
-    active = 'active',
-    inactive = 'inactive'
-}
-
-interface returnSkillDocument {
-    _id: ObjectId;
-    name?: string;
-    course?: ObjectId;
-    book?: ObjectId;
-    version?: number;
-    dbStatus?: databaseStatus;
-}
-
-interface insertSkillDocument {
+export interface returnSkillDocument {
     _id?: ObjectId;
+    userId?: ObjectId;
+    name?: string;
+    version?: number;
+    resourceId?: ObjectId[] | undefined;
+    dbStatus?: skillActiveStatus;
+}
+
+export interface insertSkillDocument {
+    _id?: ObjectId;
+    userId: ObjectId;
     name: string;
-    course?: ObjectId;
-    book?: ObjectId;
     version: number;
-    dbStatus?: databaseStatus;
+    resourceId?: ObjectId[] | undefined;
+    dbStatus?: skillActiveStatus;
 }
 
 export class Skills {
+    static collectionName = 'skills';
     static async insertSkill(skillProps: insertSkillDocument) {
         try {
             const db = await connectDb();
             const { acknowledged, insertedId }: InsertOneResult = await db
-                .collection('skills')
+                .collection(Skills.collectionName)
                 .insertOne(skillProps);
             if (!acknowledged)
                 throw new DatabaseErrors('unable to insert skill ');
@@ -53,15 +43,16 @@ export class Skills {
         }
     }
 
-    static async getSkillByName(
+    static async getSkillByNameAndUserId(
         name: string,
-        dbStatus: databaseStatus
-    ): Promise<returnSkillDocument[] | undefined> {
+        dbStatus: skillActiveStatus,
+        userId: ObjectId
+    ) {
         try {
             const db = await connectDb();
             const result: WithId<returnSkillDocument>[] = await db
-                .collection('skills')
-                .find({ name, dbStatus })
+                .collection(Skills.collectionName)
+                .find({ name, dbStatus, userId })
                 .toArray();
             if (!result)
                 throw new DatabaseErrors(
@@ -74,14 +65,15 @@ export class Skills {
         }
     }
 
-    static async getAllSkills(
-        dbStatus: databaseStatus
-    ): Promise<returnSkillDocument[] | undefined> {
+    static async getAllSkillsbyUserId(
+        userId: ObjectId,
+        dbStatus: skillActiveStatus
+    ) {
         try {
             const db = await connectDb();
             const result: WithId<returnSkillDocument>[] = await db
-                .collection('skills')
-                .find({ dbStatus })
+                .collection(Skills.collectionName)
+                .find({ userId, dbStatus })
                 .toArray();
             if (!result)
                 throw new DatabaseErrors(
@@ -98,7 +90,7 @@ export class Skills {
         try {
             const db = await connectDb();
             const result: WithId<returnSkillDocument>[] = await db
-                .collection('skills')
+                .collection(Skills.collectionName)
                 // you only want to return user password in case you are doing a password check
                 .find({ _id })
                 .toArray();
@@ -117,7 +109,7 @@ export class Skills {
         try {
             const db = await connectDb();
             const result: WithId<returnSkillDocument>[] = await db
-                .collection('skills')
+                .collection(Skills.collectionName)
                 // you only want to return user password in case you are doing a password check
                 .find({ $and: [{ _id: _id }, { version: version }] })
                 .toArray();
@@ -137,40 +129,13 @@ export class Skills {
         try {
             const db = await connectDb();
             const result = await db
-                .collection('skills')
+                .collection(Skills.collectionName)
                 /// when we delete we dont remove database entry we just change the status to inactive
                 .updateOne(
                     { _id },
                     {
                         $set: {
-                            dbStatus: databaseStatus.inactive
-                        }
-                    }
-                );
-            console.log(result);
-            return result.acknowledged;
-        } catch (err) {
-            logErrorMessage(err);
-            throw new DatabaseErrors('Unable to retrieve skill from database');
-        }
-    }
-
-    static async updateSkillByCourse(updateProps: {
-        _id: ObjectId;
-        version: number;
-        course: ObjectId | undefined;
-    }) {
-        try {
-            const db = await connectDb();
-            const { _id, version, course } = updateProps;
-            const result: UpdateResult = await db
-                .collection('skills')
-                .updateOne(
-                    { _id },
-                    {
-                        $set: {
-                            version: version,
-                            course: course
+                            dbStatus: skillActiveStatus.inactive
                         }
                     }
                 );
@@ -181,29 +146,77 @@ export class Skills {
         }
     }
 
-    static async updateSkillByBook(updateProps: {
+    static async addResource(updateProps: {
         _id: ObjectId;
         version: number;
-        book: ObjectId | undefined;
+        resourceId: ObjectId[] | undefined;
     }) {
         try {
             const db = await connectDb();
-            const { _id, version, book } = updateProps;
+            const { _id, version, resourceId } = updateProps;
+            // check that we are at right version and then only update
+            const existingVersion = await Skills.findSkillByIdAndVersion(
+                _id,
+                version - 1
+            );
+            if (!existingVersion)
+                throw new DatabaseErrors(
+                    'we cannot update since the version of the record is not correct'
+                );
             const result: UpdateResult = await db
-                .collection('skills')
+                .collection(Skills.collectionName)
                 .updateOne(
                     { _id },
                     {
                         $set: {
-                            version: version,
-                            book: book
-                        }
+                            version: version
+                        },
+                        $addToSet: { resourceId: { $each: resourceId } }
                     }
                 );
             return result.acknowledged;
         } catch (err) {
             logErrorMessage(err);
-            throw new DatabaseErrors('Unable to retrieve skill from database');
+            throw new DatabaseErrors(
+                'Unable to add resource to database either record version incorrect or something has gone wrong'
+            );
+        }
+    }
+
+    static async removeResource(updateProps: {
+        _id: ObjectId;
+        version: number;
+        resourceId: ObjectId[] | undefined;
+    }) {
+        try {
+            const db = await connectDb();
+            const { _id, version, resourceId } = updateProps;
+            // check that we are at right version and then only update
+            const existingVersion = await Skills.findSkillByIdAndVersion(
+                _id,
+                version - 1
+            );
+            if (!existingVersion)
+                throw new DatabaseErrors(
+                    'we cannot update since the version of the record is not correct'
+                );
+            const result: UpdateResult = await db
+                .collection(Skills.collectionName)
+                .updateOne(
+                    { _id },
+                    {
+                        $set: {
+                            version: version
+                        },
+                        $pullAll: { resourceId: resourceId }
+                    }
+                );
+            return result.acknowledged;
+        } catch (err) {
+            logErrorMessage(err);
+            throw new DatabaseErrors(
+                'Unable to remove resource either version number not correct or something has gone wrong'
+            );
         }
     }
 
@@ -211,18 +224,32 @@ export class Skills {
         _id: ObjectId;
         name: string;
         version: number;
+        userId: ObjectId;
     }) {
         try {
-            const { _id, name, version } = updateProps;
+            const { _id, name, version, userId } = updateProps;
             const db = await connectDb();
-
+            // check that we are at right version and then only update
+            const existingVersion = await Skills.findSkillByIdAndVersion(
+                _id,
+                version - 1
+            );
+            if (!existingVersion)
+                throw new DatabaseErrors(
+                    'we cannot update since the version of the record is not correct'
+                );
             const result: UpdateResult = await db
-                .collection('skills')
-                .updateOne({ _id }, { $set: { name: name, version: version } });
+                .collection(Skills.collectionName)
+                .updateOne(
+                    { _id, userId },
+                    { $set: { name: name, version: version } }
+                );
             return result.acknowledged;
         } catch (err) {
             logErrorMessage(err);
-            throw new DatabaseErrors('Unable to retrieve skill from database');
+            throw new DatabaseErrors(
+                'updating failed either version number not correct or something has gone wrong while updating'
+            );
         }
     }
 }

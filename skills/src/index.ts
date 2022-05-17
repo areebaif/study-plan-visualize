@@ -7,24 +7,24 @@ import { natsWrapper } from './nats-wrapper';
 import { connectDb } from './services/mongodb';
 
 import {
-    CourseCreatedListner,
-    CourseUpdatedListner,
-    CourseDeletedListner,
-    BookCreatedListner,
-    BookDeletedListner,
-    BookUpdatedListner
+    ResourceCreatedListner,
+    ResourceUpdatedListner,
+    ResourceDeletedListner
 } from './events/listeners';
+import { Express } from 'express';
 
 const PORT = process.env.PORT || 4000;
 
-const startServer = async () => {
+const startServer = async (app: Express) => {
     try {
         // check if environment variable exists
         if (
             !process.env.MONGO_DB_CONNECTION_STRING ||
             !process.env.NATS_URL ||
             !process.env.NATS_CLUSTER_ID ||
-            !process.env.NATS_CLIENT_ID
+            !process.env.NATS_CLIENT_ID ||
+            !process.env.JWT ||
+            !process.env.NODE_ENV
         )
             throw new Error('environment variable not defined');
         // connect to nats
@@ -44,12 +44,10 @@ const startServer = async () => {
         process.on('SIGTERM', () => natsWrapper.client.close());
 
         // listen for events
-        new CourseCreatedListner(natsWrapper.client).listen();
-        new CourseUpdatedListner(natsWrapper.client).listen();
-        new CourseDeletedListner(natsWrapper.client).listen();
-        new BookCreatedListner(natsWrapper.client).listen();
-        new BookUpdatedListner(natsWrapper.client).listen();
-        new BookDeletedListner(natsWrapper.client).listen();
+        new ResourceCreatedListner(natsWrapper.client).listen();
+        new ResourceUpdatedListner(natsWrapper.client).listen();
+        new ResourceDeletedListner(natsWrapper.client).listen();
+
         // connect to db
         await connectDb();
 
@@ -62,4 +60,4 @@ const startServer = async () => {
     }
 };
 
-startServer();
+startServer(app);

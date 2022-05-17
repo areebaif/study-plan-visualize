@@ -16,31 +16,24 @@ spec:
                 name: skill-srv
                 port:
                   number: 3000
-          - path: /api/programming/?(.*)
+          - path: /api/users/?(.*)
             pathType: Prefix
             backend:
               service:
-                name: programming-srv
+                name: auth-srv
                 port:
                   number: 3000
-          - path: /api/course/?(.*)
+          - path: /api/resource/?(.*)
             pathType: Prefix
             backend:
               service:
-                name: course-srv
-                port:
-                  number: 3000
-          - path: /api/book/?(.*)
-            pathType: Prefix
-            backend:
-              service:
-                name: book-srv
+                name: resource-srv
                 port:
                   number: 3000
           - path: /?(.*)
             pathType: Prefix
             backend:
               service:
-                name: client-cluster-ip-service
+                name: client-next-srv
                 port:
                   number: 3000
