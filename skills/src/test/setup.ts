@@ -11,7 +11,7 @@ let db: any;
 jest.mock('../nats-wrapper');
 
 declare global {
-    function signin(): string[];
+    function signin(): string;
 }
 
 beforeAll(async () => {
@@ -58,5 +58,5 @@ global.signin = () => {
     const base64 = Buffer.from(sessionJSON).toString('base64');
 
     // return a string thats the cookie with the encoded data
-    return [`session=${base64}`];
+    return `session=${base64}`;
 };

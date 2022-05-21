@@ -41,7 +41,7 @@ build:
     #       - "**/*.ts"
     #       - "**/*.tsx"
     #       - "**/*.css"
-    - image: areebaiftikhar/client-study-plan
+    - image: areebaiftikhar/sp-client
       context: client
       docker:
         dockerfile: Dockerfile.dev

@@ -2,7 +2,6 @@ import express, { NextFunction, Response, Request } from "express";
 import { ObjectId } from "mongodb";
 import jwt from "jsonwebtoken";
 
-import keys from "../config/keys";
 import { PasswordManager } from "../services/passwordManager";
 import { ReqAnnotateBodyString } from "../types/interfaceRequest";
 
@@ -20,7 +19,6 @@ import { DatabaseErrors } from "../errors/databaseErrors";
 import { logErrorMessage } from "../errors/customError";
 import { BadRequestError } from "../errors/badRequestError";
 
-const jwtKey = keys.JWT_KEY!;
 const router = express.Router();
 
 router.post(
@@ -31,7 +29,6 @@ router.post(
     try {
       const { email, password } = req.body;
       if (!email || !password) throw new BadRequestError("Invalid user input");
-
       // hash password before saving
       const hashedPassword = await PasswordManager.toHash(password);
 
@@ -42,6 +39,7 @@ router.post(
         email,
         password: hashedPassword,
       });
+
       if (!userArray) throw new DatabaseErrors("unable to create user");
       const [user] = userArray;
       const userNormalize = User.normalizeUserProps(user);
@@ -51,7 +49,7 @@ router.post(
           id: user._id,
           email: user.email,
         },
-        jwtKey
+        process.env.JWT_KEY!
       );
       req.session = {
         jwt: userJWT,
@@ -94,7 +92,7 @@ router.post(
           id: user._id,
           email: user.email,
         },
-        jwtKey
+        process.env.JWT_KEY!
       );
       req.session = {
         jwt: userJWT,
