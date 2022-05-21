@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: client
-          image: areebaiftikhar/client-study-plan
+          image: areebaiftikhar/sp-client
           ports:
             - containerPort: 3000
 ---

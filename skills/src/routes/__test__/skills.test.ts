@@ -22,7 +22,7 @@ describe('add a skill functionality', () => {
             .post('/api/skills/add')
             .set('Cookie', global.signin())
             .send(data);
-
+        console.log(response);
         expect(response.status).toEqual(201);
     });
 });

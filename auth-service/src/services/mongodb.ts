@@ -1,13 +1,11 @@
 import { MongoClient, Db } from "mongodb";
-import keys from "../config/keys";
 import { logErrorMessage } from "../errors/customError";
 import { DatabaseErrors } from "../errors/databaseErrors";
 
 export let db: Db;
 export let client: MongoClient;
-const environmentVariable = keys.DATABASE;
-if (!environmentVariable) throw new Error("environemnt variable undefined");
-export const URI = environmentVariable!!;
+
+export const URI = process.env.DATABASE!;
 
 export const mongoDBClient = async (URIString: string) => {
   try {
