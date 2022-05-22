@@ -14,6 +14,7 @@ import { Skills } from '../models/skills';
 import { BadRequestError } from '../errors/badRequestError';
 import { logErrorMessage } from '../errors/customError';
 import { DatabaseErrors } from '../errors/databaseErrors';
+import { NotAuthorizedError } from '../errors/notAuthroizedError';
 
 const router = express.Router();
 
@@ -72,7 +73,6 @@ interface UserPayload {
     id: string;
     email: string;
 }
-const jwtKey = process.env.JWT_KEY!;
 // create
 router.post(
     '/api/skills/add',
@@ -85,7 +85,8 @@ router.post(
         try {
             const { name } = req.body;
             const { currentUser } = req;
-            if (!name || !currentUser)
+            if (!currentUser) throw new NotAuthorizedError('not authorized');
+            if (!name)
                 throw new BadRequestError(
                     'user not authorized or skill name not provided'
                 );
@@ -153,7 +154,7 @@ router.get(
     ) => {
         try {
             const { currentUser } = req;
-            if (!currentUser) throw new BadRequestError('user not authorised');
+            if (!currentUser) throw new NotAuthorizedError('not authorized');
             const userId = new ObjectId(currentUser.id);
             const skills = await Skills.getAllSkillsbyUserId(
                 userId,
@@ -178,7 +179,7 @@ router.get(
         try {
             const { id } = req.params;
             const { currentUser } = req;
-            if (!currentUser) throw new BadRequestError('user not loggedIn');
+            if (!currentUser) throw new NotAuthorizedError('not authorized');
             const _id = new ObjectId(id);
             const skill = await Skills.getSkillById(_id);
             res.status(200).send({ data: [skill] });
@@ -201,10 +202,9 @@ router.post(
         try {
             const { id } = req.body;
             const { currentUser } = req;
-            if (!id || !currentUser)
-                throw new BadRequestError(
-                    'please provide id to delete skill or user not authorised'
-                );
+            if (!currentUser) throw new NotAuthorizedError('not authorized');
+            if (!id)
+                throw new BadRequestError('please provide id to delete skill');
             const userId = new ObjectId(currentUser.id);
             const _id = new ObjectId(id);
 
@@ -260,7 +260,8 @@ router.post(
         try {
             const { id, name } = req.body;
             const { currentUser } = req;
-            if (!id || !name || !currentUser)
+            if (!currentUser) throw new NotAuthorizedError('not authorized');
+            if (!id || !name)
                 throw new BadRequestError(
                     'please provide id and name to update skill'
                 );
@@ -277,7 +278,6 @@ router.post(
                 );
             }
             const _id = new ObjectId(id);
-
             const skill = await Skills.getSkillById(_id);
             if (!skill)
                 throw new BadRequestError(
