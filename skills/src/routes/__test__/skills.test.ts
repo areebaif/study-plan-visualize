@@ -34,13 +34,13 @@ describe('add a skill functionality', () => {
         const cookie = global.signin();
         await request(app)
             .post('/api/skills/add')
-            .set('Cookie', cookie)
+            .set('Cookie', cookie!)
             .send(data)
             .expect(201);
 
         await request(app)
             .post('/api/skills/add')
-            .set('Cookie', cookie)
+            .set('Cookie', cookie!)
             .send({
                 name: 'test'
             })
@@ -51,7 +51,7 @@ describe('add a skill functionality', () => {
         const cookie = global.signin();
         await request(app)
             .post('/api/skills/add')
-            .set('Cookie', cookie)
+            .set('Cookie', cookie!)
             .send({})
             .expect(400);
     });
