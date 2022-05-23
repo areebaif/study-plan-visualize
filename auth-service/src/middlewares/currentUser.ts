@@ -1,8 +1,6 @@
 import { Response, NextFunction, Request } from "express";
 import jwt from "jsonwebtoken";
 
-const jwtKey = process.env.JWT!;
-
 export interface UserPayload {
   id: string;
   email: string;
@@ -16,7 +14,10 @@ export const currentUser = (
   if (!req.session?.jwt) return next();
 
   try {
-    const payload = jwt.verify(req.session?.jwt, jwtKey) as UserPayload;
+    const payload = jwt.verify(
+      req.session?.jwt,
+      process.env.JWT_KEY!
+    ) as UserPayload;
     req.currentUser = payload;
   } catch (err) {}
   next();

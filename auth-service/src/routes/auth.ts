@@ -111,6 +111,7 @@ router.get(
   // Other microservices will not make a request to this end point and will verify user using JWT Token
   [currentUser],
   async (req: ReqAnnotateBodyString, res: Response, next: NextFunction) => {
+    console.log("lolalu", req.session?.jwt);
     res
       .set("Content-Type", "application/json")
       .status(200)
