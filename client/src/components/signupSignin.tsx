@@ -12,9 +12,9 @@ import {
 import TextField from "@mui/material/TextField";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 // Type imports
-import { AuthApiReturnData } from "../types";
+import { AuthApiReturnData, ErrorInterface } from "../types";
 
 export interface signinSingupProps {
   formType: string;
@@ -29,6 +29,9 @@ export const SignupSignin = (props: signinSingupProps) => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [shouldRedirect, setShouldRedirect] = React.useState(false);
+  const [errors, setErrors] = React.useState<ErrorInterface[] | null>(null);
+  const [callAuthApi, setCallAuthApi] = React.useState(false);
+  let navigate = useNavigate();
 
   const { formType } = props;
 
@@ -54,9 +57,11 @@ export const SignupSignin = (props: signinSingupProps) => {
       }
 
       const responseObject: AuthApiReturnData = await response.json();
+      console.log("responseObject", responseObject);
       if (!responseObject.errors) {
         // let the parent component know that user loggedIn now
         setShouldRedirect(true);
+        navigate("/");
       } else {
         // TODO: Error Handling
       }
@@ -67,12 +72,17 @@ export const SignupSignin = (props: signinSingupProps) => {
   };
 
   React.useEffect(() => {
-    // before making api calls cleanup for any errors before
-  });
+    setErrors(null);
+    if (callAuthApi) {
+      makeRequest(data, requestURL);
+      setCallAuthApi(false);
+    }
+  }, [callAuthApi]);
 
   const onSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     console.log(email, password);
+    setCallAuthApi(true);
   };
   return (
     <Box
@@ -110,6 +120,7 @@ export const SignupSignin = (props: signinSingupProps) => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        {errors}
         <Button
           type="submit"
           fullWidth

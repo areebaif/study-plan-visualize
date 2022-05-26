@@ -28,7 +28,7 @@ function App() {
       console.log(currentUser);
       if (currentUser) {
         setUserData(currentUser);
-        setIsLoggedIn(false);
+        setIsLoggedIn(true);
       } else {
         setIsLoggedIn(false);
       }
