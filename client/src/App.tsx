@@ -9,7 +9,8 @@ import AuthContext from "./auth-context";
 import { Header } from "./components/header";
 import { Layout } from "./components/layout";
 import { AuthApiReturnData, AuthDbRow } from "./types";
-import { SignupSignin } from "./components/signupSignin";
+import { SignupSignin } from "./components/auth/signupSignin";
+import { Signout } from "./components/auth/signout";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
@@ -31,14 +32,23 @@ function App() {
         setIsLoggedIn(true);
       } else {
         setIsLoggedIn(false);
+        setUserData(null);
       }
     } catch (err) {
-      // log error for debugging purposes
+      // TODO: error handling
       if (err instanceof Error) console.log(err);
     }
   };
   const logOutHandler = () => {
+    console.log("logout triggered");
     setIsLoggedIn(false);
+    setUserData(null);
+  };
+
+  const loginHandler = (currentUser: AuthDbRow) => {
+    console.log("login triggered");
+    setIsLoggedIn(true);
+    setUserData(currentUser);
   };
 
   React.useEffect(() => {
@@ -57,11 +67,19 @@ function App() {
             <Route path="/" element={<Layout />} />
             <Route
               path="/users/signup"
-              element={<SignupSignin formType={"signup"} />}
+              element={
+                <SignupSignin formType={"signup"} loginHandler={loginHandler} />
+              }
             />
             <Route
               path="/users/signin"
-              element={<SignupSignin formType={"signin"} />}
+              element={
+                <SignupSignin formType={"signin"} loginHandler={loginHandler} />
+              }
+            />
+            <Route
+              path="/users/signout"
+              element={<Signout logoutHandler={logOutHandler} />}
             />
           </Routes>
         </React.Fragment>

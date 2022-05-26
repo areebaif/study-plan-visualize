@@ -18,7 +18,7 @@ app.use(
     // Hence turn off built-in encryption support as other microservices might not be in node
     signed: false,
     name: "session",
-    secure: process.env.NODE_ENV !== "test",
+    secure: process.env.NODE_ENV === "production",
   })
 );
 // middleware

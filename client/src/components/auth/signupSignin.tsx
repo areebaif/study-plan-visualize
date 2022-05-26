@@ -14,11 +14,12 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 
 import { useNavigate } from "react-router-dom";
 // Type imports
-import { AuthApiReturnData, ErrorInterface } from "../types";
+import { AuthApiReturnData, AuthDbRow } from "../../types";
 
-export interface signinSingupProps {
+export type signinSingupProps = {
   formType: string;
-}
+  loginHandler: (currentUser: AuthDbRow) => void;
+};
 
 type ApiRequestData = {
   email: string;
@@ -28,12 +29,11 @@ type ApiRequestData = {
 export const SignupSignin = (props: signinSingupProps) => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [shouldRedirect, setShouldRedirect] = React.useState(false);
-  const [errors, setErrors] = React.useState<ErrorInterface[] | null>(null);
+  const [errors, setErrors] = React.useState<JSX.Element[] | null>(null);
   const [callAuthApi, setCallAuthApi] = React.useState(false);
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
-  const { formType } = props;
+  const { formType, loginHandler } = props;
 
   // data for make request function
   const requestURL =
@@ -57,16 +57,20 @@ export const SignupSignin = (props: signinSingupProps) => {
       }
 
       const responseObject: AuthApiReturnData = await response.json();
-      console.log("responseObject", responseObject);
-      if (!responseObject.errors) {
-        // let the parent component know that user loggedIn now
-        setShouldRedirect(true);
+
+      if (responseObject.data) {
+        console.log("Iam here");
+        const { data } = responseObject;
+        loginHandler(data);
         navigate("/");
-      } else {
-        // TODO: Error Handling
+      } else if (responseObject.errors) {
+        const error = responseObject.errors.map((err) => {
+          return <li key={err.message}>{err.message}</li>;
+        });
+        setErrors(error);
       }
     } catch (err) {
-      // TODO: Do Error Handling
+      // TODO: Error Handling
       if (err instanceof Error) console.log(err);
     }
   };
@@ -81,7 +85,6 @@ export const SignupSignin = (props: signinSingupProps) => {
 
   const onSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    console.log(email, password);
     setCallAuthApi(true);
   };
   return (
@@ -133,31 +136,3 @@ export const SignupSignin = (props: signinSingupProps) => {
     </Box>
   );
 };
-
-//   return (
-//     <div>
-//       {shouldRedirect && <Navigate to="/" />}
-//       <form onSubmit={onSubmit} className="container">
-//         <h1>{formType}</h1>
-//         <div className="form-group">
-//           <label>Email Address</label>
-//           <input
-//             value={email}
-//             onChange={(e) => setEmail(e.target.value)}
-//             className="form-control"
-//           ></input>
-//         </div>
-//         <div className="form-group">
-//           <label>Password</label>
-//           <input
-//             value={password}
-//             onChange={(e) => setPassword(e.target.value)}
-//             type="password"
-//             className="form-control"
-//           ></input>
-//         </div>
-//         <button className="btn btn-primary">{formType}</button>
-//       </form>
-//     </div>
-//   );
-// };
