@@ -33,11 +33,15 @@ Hey! Welcome, this is a microservices app for creating a customised study plan a
 
 Provide a mongodb connection string (atlasConnectionString): Register for free subscription here: [https://www.mongodb.com/cloud](https://www.mongodb.com/cloud)
 
-## Running Development ENV
+## Running full stack development environment
 
 In the root of your project run `skaffold dev` to run Development Environment.
 
 The client should be running on localhost, and your backend services should be running in kubernetes
+
+## Running client development environment
+
+Refer to the [readme](./client/README.md) file for this service.
 
 ## Open Api Documentation
 

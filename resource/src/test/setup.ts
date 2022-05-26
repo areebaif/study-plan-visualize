@@ -2,20 +2,20 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import { ObjectId } from 'mongodb';
 import jwt from 'jsonwebtoken';
 
-import { app } from '../app';
 import { connectDb, mongoDBClient } from '../services/mongodb';
 
 let mongo: any;
 let client: any;
 let db: any;
 
-jest.mock('../nats-wrapper');
+jest.mock('../../nats-wrapper');
 
 declare global {
-    function signin(): string[];
+    function signin(): string;
 }
 
 beforeAll(async () => {
+    jest.resetModules();
     process.env.JWT_KEY = 'asdfasdf';
     mongo = await MongoMemoryServer.create();
     const mongoUri = mongo.getUri();
@@ -58,5 +58,5 @@ global.signin = () => {
     const base64 = Buffer.from(sessionJSON).toString('base64');
 
     // return a string thats the cookie with the encoded data
-    return [`session=${base64}`];
+    return `session=${base64}`;
 };
