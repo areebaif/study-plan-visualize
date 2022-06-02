@@ -25,11 +25,11 @@ export const Signout = (props: signoutProps) => {
       if (!response.ok) throw new Error("something went wrong!!!");
       const result: AuthApiReturnData = await response.json();
       console.log("result of signout", result);
-      if (response.ok) {
+      if (!result.currentUser) {
         // now we should redirect user
         console.log("now navigating");
         logoutHandler();
-        navigate("/");
+        navigate("/users/signin");
       } else {
         throw new Error("something went wrong horribly");
       }

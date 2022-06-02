@@ -15,6 +15,7 @@ import { Signout } from "./components/auth/signout";
 function App() {
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [userData, setUserData] = React.useState<null | AuthDbRow>(null);
+  const [authChanged, setAuthChanged] = React.useState(false);
   const checkAuthStatus = async () => {
     try {
       const response = await fetch("/api/users/currentuser", {
@@ -26,13 +27,15 @@ function App() {
         throw new TypeError("Oops, we haven't got JSON!");
       }
       const { currentUser }: AuthApiReturnData = await response.json();
-      console.log(currentUser);
+      console.log("inisde backend call", currentUser);
       if (currentUser) {
         setUserData(currentUser);
         setIsLoggedIn(true);
+        setAuthChanged(false);
       } else {
-        setIsLoggedIn(false);
         setUserData(null);
+        setIsLoggedIn(false);
+        setAuthChanged(false);
       }
     } catch (err) {
       // TODO: error handling
@@ -43,47 +46,45 @@ function App() {
     console.log("logout triggered");
     setIsLoggedIn(false);
     setUserData(null);
+    setAuthChanged(true);
   };
 
   const loginHandler = (currentUser: AuthDbRow) => {
     console.log("login triggered");
     setIsLoggedIn(true);
     setUserData(currentUser);
+    setAuthChanged(true);
   };
 
   React.useEffect(() => {
-    checkAuthStatus();
-  }, []);
+    if (!authChanged) checkAuthStatus();
+  }, [authChanged]);
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AuthContext.Provider
-        value={{ isLoggedIn: isLoggedIn, userData: userData }}
-      >
-        <React.Fragment>
-          <Header />
-          <Routes>
-            <Route path="/" element={<Layout />} />
-            <Route
-              path="/users/signup"
-              element={
-                <SignupSignin formType={"signup"} loginHandler={loginHandler} />
-              }
-            />
-            <Route
-              path="/users/signin"
-              element={
-                <SignupSignin formType={"signin"} loginHandler={loginHandler} />
-              }
-            />
-            <Route
-              path="/users/signout"
-              element={<Signout logoutHandler={logOutHandler} />}
-            />
-          </Routes>
-        </React.Fragment>
-      </AuthContext.Provider>
+      <React.Fragment>
+        <Header isLoggedIn={isLoggedIn} />
+        <Routes>
+          <Route path="/" element={<Layout />} />
+          <Route
+            path="/users/signup"
+            element={
+              <SignupSignin formType={"signup"} loginHandler={loginHandler} />
+            }
+          />
+          <Route
+            path="/users/signin"
+            element={
+              <SignupSignin formType={"signin"} loginHandler={loginHandler} />
+            }
+          />
+          <Route
+            path="/users/signout"
+            element={<Signout logoutHandler={logOutHandler} />}
+          />
+        </Routes>
+      </React.Fragment>
     </ThemeProvider>
   );
 }
