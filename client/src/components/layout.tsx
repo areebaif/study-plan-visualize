@@ -16,6 +16,9 @@ export const Layout: React.FC = () => {
   const [skillItemsChange, setSkillItemsChange] = React.useState(false);
   // skill list state will be here for a user
   // to update this stae pass down a call back
+
+  const getRequest = async () => {};
+
   React.useEffect(() => {
     if (!skillItemsChange) {
       // TODO: call backend api to fetch all skills
@@ -23,7 +26,7 @@ export const Layout: React.FC = () => {
   }, [skillItemsChange]);
 
   const onAddItem = () => {
-    setSkillItemsChange(true);
+    setSkillItemsChange(false);
   };
 
   console.log("hello");

@@ -16,7 +16,7 @@ declare global {
 
 beforeAll(async () => {
     jest.resetModules();
-    process.env.JWT_KEY = 'asdfasdf';
+    process.env.JWT = 'asdfasdf';
     mongo = await MongoMemoryServer.create();
     const mongoUri = mongo.getUri();
     client = await mongoDBClient(mongoUri);
@@ -46,7 +46,7 @@ global.signin = () => {
     };
 
     // Create the JWT!
-    const token = jwt.sign(payload, process.env.JWT_KEY!);
+    const token = jwt.sign(payload, process.env.JWT!);
 
     // Build session Object. { jwt: MY_JWT }
     const session = { jwt: token };
