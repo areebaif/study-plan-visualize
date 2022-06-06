@@ -2,7 +2,6 @@ import request from 'supertest';
 import { returnSkillDocument } from '../../models/skills';
 import { natsWrapper } from '../../nats-wrapper';
 import { app } from '../../app';
-import cookieSession from 'cookie-session';
 import { ObjectId } from 'mongodb';
 
 describe('add a skill functionality', () => {
