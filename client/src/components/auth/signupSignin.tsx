@@ -8,6 +8,9 @@ import {
   CardContent,
   Typography,
   Avatar,
+  List,
+  ListItem,
+  ListItemText,
 } from "@mui/material";
 import TextField from "@mui/material/TextField";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -29,7 +32,7 @@ type ApiRequestData = {
 export const SignupSignin = (props: signinSingupProps) => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [errors, setErrors] = React.useState<JSX.Element[] | null>(null);
+  const [errors, setErrors] = React.useState<JSX.Element | null>(null);
   const [callAuthApi, setCallAuthApi] = React.useState(false);
   const navigate = useNavigate();
 
@@ -64,9 +67,17 @@ export const SignupSignin = (props: signinSingupProps) => {
         loginHandler(data);
         navigate("/");
       } else if (responseObject.errors) {
-        const error = responseObject.errors.map((err) => {
-          return <li key={err.message}>{err.message}</li>;
-        });
+        const error = (
+          <List>
+            {responseObject.errors.map((err) => {
+              return (
+                <ListItem key={err.message}>
+                  <ListItemText primary={err.message}></ListItemText>
+                </ListItem>
+              );
+            })}
+          </List>
+        );
         setErrors(error);
       }
     } catch (err) {

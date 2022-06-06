@@ -6,7 +6,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import Box from "@mui/material";
+import { Box, List, ListItem, ListItemText } from "@mui/material";
 
 import { SkillApiReturnData } from "../types";
 
@@ -23,6 +23,8 @@ export const FormDialog: React.FC<FormDialogueProps> = (props) => {
   const { open, setOpen, onAddItem } = props;
   const [name, setName] = React.useState("");
   const [addItemChange, setAddItemChange] = React.useState(false);
+  const [errors, setErrors] = React.useState<JSX.Element | null>(null);
+
   // back end post request data
   const url = "/api/skills/add";
   const data = { name: name };
@@ -49,13 +51,21 @@ export const FormDialog: React.FC<FormDialogueProps> = (props) => {
         onAddItem();
         // close the dialogue box
         setOpen(false);
+        setName("");
       } else if (responseObject.errors) {
         setAddItemChange(false);
-        const error = responseObject.errors.map((err) => {
-          return <li key={err.message}>{err.message}</li>;
-        });
-        // TODO: Set Errors
-        //setErrors(error);
+        const error = (
+          <List>
+            {responseObject.errors.map((err) => {
+              return (
+                <ListItem key={err.message}>
+                  <ListItemText primary={err.message}></ListItemText>
+                </ListItem>
+              );
+            })}
+          </List>
+        );
+        setErrors(error);
       }
     } catch (err) {
       // TODO: error handling
@@ -66,7 +76,6 @@ export const FormDialog: React.FC<FormDialogueProps> = (props) => {
   const handleSubmit = () => {
     // set addItemChange to true
     setAddItemChange(true);
-    setOpen(false);
   };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,8 +84,9 @@ export const FormDialog: React.FC<FormDialogueProps> = (props) => {
 
   React.useEffect(() => {
     if (addItemChange) {
+      setErrors(null);
       makeRequest(data, url);
-      setName("");
+      //setName("");
     }
   }, [addItemChange]);
 
@@ -94,9 +104,18 @@ export const FormDialog: React.FC<FormDialogueProps> = (props) => {
           value={name}
           onChange={handleChange}
         />
+        {errors}
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => setOpen(false)}>Cancel</Button>
+        <Button
+          onClick={() => {
+            setOpen(false);
+            setErrors(null);
+            setName("");
+          }}
+        >
+          Cancel
+        </Button>
         <Button onClick={() => handleSubmit()}>Submit</Button>
       </DialogActions>
     </Dialog>
