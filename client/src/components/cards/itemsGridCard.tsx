@@ -138,7 +138,7 @@ export const ItemsGridCard = () => (
         size="small"
         variant="text"
       >
-        Add Skill
+        Add Resource
       </Button>
     </Box>
   </Card>

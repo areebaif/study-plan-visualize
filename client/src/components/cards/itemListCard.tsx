@@ -29,11 +29,12 @@ type ItemListProps = {
   items?: Item[];
   title?: string;
   itemType?: string;
+  onAddItem: () => void;
 };
 
 export const ItemList: React.FC<ItemListProps> = (props) => {
   // Props
-  const { items, title, itemType } = props;
+  const { items, title, itemType, onAddItem } = props;
   // Derived From props
   const displayTitle = title || "Unknown Items";
 
@@ -82,7 +83,11 @@ export const ItemList: React.FC<ItemListProps> = (props) => {
         >
           Add {itemType}
         </Button>
-        <FormDialog open={open} setOpen={setOpen}></FormDialog>
+        <FormDialog
+          open={open}
+          setOpen={setOpen}
+          onAddItem={onAddItem}
+        ></FormDialog>
       </Box>
     </Card>
   );
