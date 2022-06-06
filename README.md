@@ -45,7 +45,7 @@ Refer to the [readme](./client/README.md) file for this service.
 
 ## Open Api Documentation
 
-In order to check the Docs for Each API, please go into the src/index.ts to get the relative url to the root and append it after localhost
+In order to check the Docs for Each API, please go into the src/app.ts to get the relative url to the root and append it after localhost
 
 **_Example:_**
 
