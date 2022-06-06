@@ -11,7 +11,7 @@ export interface AuthDbRow {
 export interface AuthApiReturnData {
   data?: AuthDbRow | null | undefined;
   currentUser?: AuthDbRow | null;
-  errors?: Error[];
+  errors?: ErrorDocument[];
 }
 
 export interface SkillApiDocument {
