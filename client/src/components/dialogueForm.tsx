@@ -14,16 +14,20 @@ type FormDialogueProps = {
   open: boolean;
   setOpen: (val: boolean) => void;
   onAddItem: () => void;
+  formType: string;
+  editName?: string;
+  _id?: string;
 };
 type ApiRequestData = {
   name: string;
 };
 
 export const FormDialog: React.FC<FormDialogueProps> = (props) => {
-  const { open, setOpen, onAddItem } = props;
+  const { open, setOpen, onAddItem, formType, editName, _id } = props;
   const [name, setName] = React.useState("");
   const [addItemChange, setAddItemChange] = React.useState(false);
   const [errors, setErrors] = React.useState<JSX.Element | null>(null);
+  console.log("edit", editName, _id);
 
   // back end post request data
   const url = "/api/skills/add";
@@ -92,7 +96,7 @@ export const FormDialog: React.FC<FormDialogueProps> = (props) => {
 
   return (
     <Dialog open={open} onClose={() => setOpen(false)}>
-      <DialogTitle>Add Skill</DialogTitle>
+      <DialogTitle>{formType}</DialogTitle>
       <DialogContent
         sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
       >
