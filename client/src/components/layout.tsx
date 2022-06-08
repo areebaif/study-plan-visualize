@@ -99,7 +99,7 @@ export const Layout: React.FC = () => {
               items={skillItems ? skillItems : products}
               title={"Skills List"}
               itemType={"Skill"}
-              onAddItem={onSkillChange}
+              onItemChange={onSkillChange}
             />
           </Grid>
           <Grid item xl={6} lg={6} sm={6} xs={12}>
