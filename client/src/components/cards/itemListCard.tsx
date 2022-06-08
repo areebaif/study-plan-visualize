@@ -11,36 +11,63 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 
 import { FormDialog } from "../dialogueForm";
+import { DeleteFormDialog } from "../deleteDialogue";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import DeleteIcon from "@mui/icons-material/Delete";
 import BookIcon from "@mui/icons-material/Book";
+import CreateIcon from "@mui/icons-material/Create";
+import { skillActiveStatus } from "../../types";
 
 type Item = {
-  id?: string;
+  id?: string; // dummy data
+  imageUrl?: string; // dummy data
+  updatedAt?: number | Date; // dummy data
+  _id?: string;
+  userId?: string;
   name?: string;
-  imageUrl?: string;
-  updatedAt?: number | Date;
+  version?: number;
+  resourceId?: string[] | undefined;
+  dbStatus?: skillActiveStatus;
 };
 
 type ItemListProps = {
   items?: Item[];
   title?: string;
   itemType?: string;
-  onAddItem: () => void;
+  onItemChange: () => void;
 };
 
 export const ItemList: React.FC<ItemListProps> = (props) => {
   // Props
-  const { items, title, itemType, onAddItem } = props;
+  const { items, title, itemType, onItemChange } = props;
+  const [open, setOpen] = React.useState(false);
+  // props to edit a skill Item
+  const [editName, setEditName] = React.useState<undefined | string>(undefined);
+  const [itemId, setItemId] = React.useState<undefined | string>(undefined);
+  const [editOpen, setEditOpen] = React.useState(false);
+  // // props to delete a skill Item
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
+
   // Derived From props
   const displayTitle = title || "Unknown Items";
 
-  const [open, setOpen] = React.useState(false);
   const handleClose = () => {
     setOpen(false);
+  };
+
+  const onEditItem = () => {
+    setEditName(undefined);
+    setItemId(undefined);
+  };
+
+  const onDeleteItem = () => {
+    setItemId(undefined);
   };
 
   // Render
@@ -50,20 +77,48 @@ export const ItemList: React.FC<ItemListProps> = (props) => {
       <Divider />
       {items && (
         <List>
-          {items.map((item, i) => (
-            <ListItem divider={i < items?.length - 1} key={item.id}>
-              <ListItemAvatar>
-                <BookIcon />
-              </ListItemAvatar>
-              <ListItemText
-                primary={item.name}
-                secondary={`Learned By: Test, test ,test`}
-              />
-              <IconButton edge="end" size="small">
-                <MoreVertIcon />
-              </IconButton>
-            </ListItem>
-          ))}
+          {items.map((item, i) => {
+            return (
+              <ListItem divider={i < items?.length - 1} key={item._id}>
+                <ListItemAvatar>
+                  <BookIcon />
+                </ListItemAvatar>
+                <ListItemText
+                  primary={item.name}
+                  secondary={`Learned By: Test, test ,test`}
+                />
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    p: 2,
+                  }}
+                >
+                  <IconButton
+                    onClick={() => {
+                      setEditName(item.name);
+                      setItemId(item._id);
+                      setEditOpen(true);
+                    }}
+                    edge="end"
+                    size="small"
+                  >
+                    <CreateIcon />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => {
+                      setItemId(item._id);
+                      setDeleteOpen(true);
+                    }}
+                    edge="end"
+                    size="small"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
+              </ListItem>
+            );
+          })}
         </List>
       )}
       <Divider />
@@ -86,8 +141,26 @@ export const ItemList: React.FC<ItemListProps> = (props) => {
         <FormDialog
           open={open}
           setOpen={setOpen}
-          onAddItem={onAddItem}
+          onItemChange={onItemChange}
+          formType={"Add Skill"}
         ></FormDialog>
+        <FormDialog
+          open={editOpen}
+          setOpen={setEditOpen}
+          onItemChange={onItemChange}
+          formType={"Edit Skill"}
+          editName={editName}
+          id={itemId}
+          onEditItem={onEditItem}
+        ></FormDialog>
+        <DeleteFormDialog
+          open={deleteOpen}
+          setOpen={setDeleteOpen}
+          onItemChange={onItemChange}
+          formType={"Delete Skill"}
+          onDeleteItem={onDeleteItem}
+          id={itemId}
+        ></DeleteFormDialog>
       </Box>
     </Card>
   );

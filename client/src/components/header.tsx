@@ -46,6 +46,7 @@ export const Header: React.FC<headerProps> = ({ isLoggedIn }) => {
     isLoggedIn && { label: "Profile", href: "/" },
     isLoggedIn && { label: "Sign out", href: "/users/signout" },
     !isLoggedIn && { label: "Sign in", href: "/users/signin" },
+    !isLoggedIn && { label: "Sign up", href: "/users/signup" },
   ].filter((linkConfig) => linkConfig);
   //const settings = ["Profile", "Account", "Dashboard", "Logout"];
 
