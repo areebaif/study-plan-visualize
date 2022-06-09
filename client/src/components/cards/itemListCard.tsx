@@ -15,8 +15,8 @@ import {
   MenuItem,
 } from "@mui/material";
 
-import { FormDialog } from "../dialogueForm";
-import { DeleteFormDialog } from "../deleteDialogue";
+import { UpsertFormDialog } from "../dialogForms/upsertDialog";
+import { DeleteFormDialog } from "../dialogForms/deleteDialog";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -138,21 +138,23 @@ export const ItemList: React.FC<ItemListProps> = (props) => {
         >
           Add {itemType}
         </Button>
-        <FormDialog
+        <UpsertFormDialog
           open={open}
           setOpen={setOpen}
           onItemChange={onItemChange}
           formType={"Add Skill"}
-        ></FormDialog>
-        <FormDialog
-          open={editOpen}
-          setOpen={setEditOpen}
-          onItemChange={onItemChange}
-          formType={"Edit Skill"}
-          editName={editName}
-          id={itemId}
-          onEditItem={onEditItem}
-        ></FormDialog>
+        ></UpsertFormDialog>
+        {editOpen && (
+          <UpsertFormDialog
+            open={editOpen}
+            setOpen={setEditOpen}
+            onItemChange={onItemChange}
+            formType={"Edit Skill"}
+            editName={editName}
+            id={itemId}
+            onEditItem={onEditItem}
+          ></UpsertFormDialog>
+        )}
         <DeleteFormDialog
           open={deleteOpen}
           setOpen={setDeleteOpen}
