@@ -8,35 +8,29 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { Box, List, ListItem, ListItemText } from "@mui/material";
 
-import { SkillApiReturnData } from "../types";
+import { SkillApiReturnData } from "../../types";
 
 type FormDialogueProps = {
   open: boolean;
   setOpen: (val: boolean) => void;
   onItemChange: () => void;
+  onDeleteItem: () => void;
   formType: string;
-  editName?: string;
   id?: string;
-  onEditItem?: () => void;
 };
 type ApiRequestData = {
-  name: string;
   id?: string;
 };
 
-export const FormDialog: React.FC<FormDialogueProps> = (props) => {
-  const { open, setOpen, onItemChange, formType, editName, id, onEditItem } =
-    props;
-  const [name, setName] = React.useState<string>("");
+export const DeleteFormDialog: React.FC<FormDialogueProps> = (props) => {
+  const { open, setOpen, onItemChange, formType, id, onDeleteItem } = props;
   const [upsertItem, setUpsertItem] = React.useState(false);
   const [errors, setErrors] = React.useState<JSX.Element | null>(null);
-  console.log("edit", editName, name, id);
+  console.log("delete", id);
 
   // back end post request data
-  const url =
-    formType === "Add Skill" ? "/api/skills/add" : "/api/skills/update";
-  const addSkillData = { name: name };
-  const editSkillData = { name: name, id: id };
+  const url = "/api/skills/destroy";
+  const data = { id: id };
 
   const makeRequest = async (data: ApiRequestData, url: string) => {
     try {
@@ -53,15 +47,15 @@ export const FormDialog: React.FC<FormDialogueProps> = (props) => {
         throw new TypeError("Oops, we haven't got JSON!");
       }
       const responseObject: SkillApiReturnData = await response.json();
+      // fix typing at backend deleted returns true
       if (responseObject.data) {
         // change state so that useEffect does not trigger backend call
         setUpsertItem(false);
         // close the dialogue box
         setOpen(false);
-        setName("");
         // trigger callback to top component
         onItemChange();
-        onEditItem?.();
+        onDeleteItem();
       } else if (responseObject.errors) {
         setUpsertItem(false);
         const error = (
@@ -91,44 +85,28 @@ export const FormDialog: React.FC<FormDialogueProps> = (props) => {
   const handleCancel = () => {
     setOpen(false);
     setErrors(null);
-    setName("");
     // this callback clears state which we want to do when we cancel
-    onEditItem?.();
-  };
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setName(event.target.value);
+    onDeleteItem();
   };
 
   React.useEffect(() => {
     if (upsertItem) {
       setErrors(null);
-
-      formType === "Add Skill"
-        ? makeRequest(addSkillData, url)
-        : makeRequest(editSkillData, url);
+      makeRequest(data, url);
+      // TODO: makeBackend call
     }
   }, [upsertItem]);
 
   return (
     <Dialog open={open} onClose={() => setOpen(false)}>
       <DialogTitle>{formType}</DialogTitle>
-      <DialogContent
-        sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
-      >
-        <TextField
-          autoFocus
-          margin="dense"
-          id="outlined-name"
-          label="Name"
-          value={name}
-          onChange={handleChange}
-        />
+      <DialogContent>
+        Are you sure you want to delete?
         {errors}
       </DialogContent>
       <DialogActions>
         <Button onClick={handleCancel}>Cancel</Button>
-        <Button onClick={handleSubmit}>Submit</Button>
+        <Button onClick={handleSubmit}>Yes</Button>
       </DialogActions>
     </Dialog>
   );
