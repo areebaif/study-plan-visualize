@@ -63,28 +63,32 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <React.Fragment>
-        <Header isLoggedIn={isLoggedIn} />
-        <Routes>
-          <Route path="/" element={<Layout />} />
-          <Route
-            path="/users/signup"
-            element={
-              <SignupSignin formType={"signup"} loginHandler={loginHandler} />
-            }
-          />
-          <Route
-            path="/users/signin"
-            element={
-              <SignupSignin formType={"signin"} loginHandler={loginHandler} />
-            }
-          />
-          <Route
-            path="/users/signout"
-            element={<Signout logoutHandler={logOutHandler} />}
-          />
-        </Routes>
-      </React.Fragment>
+      <AuthContext.Provider
+        value={{ isLoggedIn: isLoggedIn, userData: userData }}
+      >
+        <React.Fragment>
+          <Header isLoggedIn={isLoggedIn} />
+          <Routes>
+            <Route path="/" element={<Layout />} />
+            <Route
+              path="/users/signup"
+              element={
+                <SignupSignin formType={"signup"} loginHandler={loginHandler} />
+              }
+            />
+            <Route
+              path="/users/signin"
+              element={
+                <SignupSignin formType={"signin"} loginHandler={loginHandler} />
+              }
+            />
+            <Route
+              path="/users/signout"
+              element={<Signout logoutHandler={logOutHandler} />}
+            />
+          </Routes>
+        </React.Fragment>
+      </AuthContext.Provider>
     </ThemeProvider>
   );
 }

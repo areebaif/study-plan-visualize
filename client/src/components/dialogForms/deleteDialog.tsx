@@ -8,7 +8,7 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { Box, List, ListItem, ListItemText } from "@mui/material";
 
-import { SkillApiReturnData } from "../../types";
+import { ErrorDocument } from "../../types";
 
 type FormDialogueProps = {
   open: boolean;
@@ -46,7 +46,8 @@ export const DeleteFormDialog: React.FC<FormDialogueProps> = (props) => {
       if (!contentType || !contentType.includes("application/json")) {
         throw new TypeError("Oops, we haven't got JSON!");
       }
-      const responseObject: SkillApiReturnData = await response.json();
+      const responseObject: { data?: boolean; errors?: ErrorDocument[] } =
+        await response.json();
       // fix typing at backend deleted returns true
       if (responseObject.data) {
         // change state so that useEffect does not trigger backend call

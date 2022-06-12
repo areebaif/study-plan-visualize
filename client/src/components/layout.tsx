@@ -17,9 +17,9 @@ import { products } from "../utils";
 import { SkillApiDocument, SkillApiReturnData } from "../types";
 
 export const Layout: React.FC = () => {
-  const [skillItems, setSkillItems] = React.useState<
-    SkillApiDocument[] | undefined
-  >(undefined);
+  const [skillItems, setSkillItems] = React.useState<SkillApiDocument[] | []>(
+    []
+  );
   const [skillItemsChange, setSkillItemsChange] = React.useState(false);
   const [errors, setErrors] = React.useState<JSX.Element | null>(null);
   // skill list state will be here for a user
@@ -73,7 +73,6 @@ export const Layout: React.FC = () => {
     setSkillItemsChange(false);
   };
 
-  console.log("hello");
   return (
     <Box
       component="main"
@@ -96,14 +95,14 @@ export const Layout: React.FC = () => {
 
           <Grid item xl={6} lg={6} sm={6} xs={12}>
             <ItemList
-              items={skillItems ? skillItems : products}
+              items={skillItems.length ? skillItems : products}
               title={"Skills List"}
               itemType={"Skill"}
               onItemChange={onSkillChange}
             />
           </Grid>
           <Grid item xl={6} lg={6} sm={6} xs={12}>
-            <ItemsGridCard />
+            <ItemsGridCard skillItems={skillItems} />
           </Grid>
         </Grid>
       </Container>

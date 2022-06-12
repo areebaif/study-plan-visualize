@@ -138,12 +138,14 @@ export const ItemList: React.FC<ItemListProps> = (props) => {
         >
           Add {itemType}
         </Button>
-        <UpsertFormDialog
-          open={open}
-          setOpen={setOpen}
-          onItemChange={onItemChange}
-          formType={"Add Skill"}
-        ></UpsertFormDialog>
+        {open && (
+          <UpsertFormDialog
+            open={open}
+            setOpen={setOpen}
+            onItemChange={onItemChange}
+            formType={"Add Skill"}
+          ></UpsertFormDialog>
+        )}
         {editOpen && (
           <UpsertFormDialog
             open={editOpen}
@@ -155,14 +157,16 @@ export const ItemList: React.FC<ItemListProps> = (props) => {
             onEditItem={onEditItem}
           ></UpsertFormDialog>
         )}
-        <DeleteFormDialog
-          open={deleteOpen}
-          setOpen={setDeleteOpen}
-          onItemChange={onItemChange}
-          formType={"Delete Skill"}
-          onDeleteItem={onDeleteItem}
-          id={itemId}
-        ></DeleteFormDialog>
+        {deleteOpen && (
+          <DeleteFormDialog
+            open={deleteOpen}
+            setOpen={setDeleteOpen}
+            onItemChange={onItemChange}
+            formType={"Delete Skill"}
+            onDeleteItem={onDeleteItem}
+            id={itemId}
+          ></DeleteFormDialog>
+        )}
       </Box>
     </Card>
   );
