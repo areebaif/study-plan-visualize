@@ -12,6 +12,8 @@ import {
   ListItem,
   ListItemText,
 } from "@mui/material";
+import Alert from "@mui/material/Alert";
+import { SeverityPill } from "../severitypill";
 import TextField from "@mui/material/TextField";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 
@@ -134,7 +136,7 @@ export const SignupSignin = (props: signinSingupProps) => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        {errors}
+        <SeverityPill color={"error"}>{errors}</SeverityPill>
         <Button
           type="submit"
           fullWidth
