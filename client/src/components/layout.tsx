@@ -104,6 +104,17 @@ export const Layout: React.FC = () => {
           <Grid item xl={6} lg={6} sm={6} xs={12}>
             <ItemsGridCard skillItems={skillItems} />
           </Grid>
+          <Grid item xl={6} lg={6} sm={6} xs={12}>
+            <ItemList
+              items={skillItems.length ? skillItems : products}
+              title={"Skills List"}
+              itemType={"Skill"}
+              onItemChange={onSkillChange}
+            />
+          </Grid>
+          <Grid item xl={6} lg={6} sm={12} xs={12}>
+            <ItemsGridCard skillItems={skillItems} />
+          </Grid>
         </Grid>
       </Container>
     </Box>
