@@ -1,6 +1,5 @@
 import * as React from "react";
 
-import { format } from "date-fns";
 import { v4 as uuid } from "uuid";
 import {
   Box,
@@ -124,10 +123,11 @@ interface MappedResources {
   learningStatus: number;
   skills: { skillId: string; skillName: string }[];
 }
-[];
 type ItemsGridCardProps = {
   skillItems: SkillApiDocument[] | [];
 };
+
+// TODO:function to Map resources
 
 export const ItemsGridCard = (props: ItemsGridCardProps) => {
   // keep the state of popup component here in case we have to edit so we need to prepopulate list
@@ -190,7 +190,7 @@ export const ItemsGridCard = (props: ItemsGridCardProps) => {
   return (
     <Card>
       <CardHeader title="Resource List" />
-      <Box sx={{ minWidth: 800, overflow: "auto" }}>
+      <Box sx={{ minWidth: 800, overflow: "auto", maxHeight: "400px" }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -240,7 +240,7 @@ export const ItemsGridCard = (props: ItemsGridCardProps) => {
       >
         <Button
           color="primary"
-          endIcon={<ArrowRightIcon fontSize="small" />}
+          endIcon={<ArrowRightIcon />}
           size="small"
           variant="text"
           onClick={() => setOpen(true)}

@@ -76,7 +76,7 @@ export const ItemList: React.FC<ItemListProps> = (props) => {
       <CardHeader subtitle={`${items?.length} in total`} title={displayTitle} />
       <Divider />
       {items && (
-        <List>
+        <List style={{ maxHeight: "400px", overflow: "auto" }}>
           {items.map((item, i) => {
             return (
               <ListItem divider={i < items?.length - 1} key={item._id}>
@@ -126,7 +126,7 @@ export const ItemList: React.FC<ItemListProps> = (props) => {
         sx={{
           display: "flex",
           justifyContent: "flex-end",
-          p: 2,
+          p: 3,
         }}
       >
         <Button
