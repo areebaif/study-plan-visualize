@@ -27,7 +27,7 @@ export const Layout: React.FC = () => {
 
   const getAllSkillRequest = async () => {
     try {
-      const response = await fetch("/api/skills/all", {
+      const response = await fetch("api/skills/all", {
         method: "GET",
         credentials: "include",
       });

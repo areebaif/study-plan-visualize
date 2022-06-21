@@ -1,7 +1,11 @@
 import * as React from "react";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
-import { SkillApiDocument, SkillApiReturnData } from "../types";
+import {
+  SkillApiDocument,
+  SkillApiReturnData,
+  ResourceApiDocument,
+} from "../types";
 
 type AutoCompleteListProps = {
   skillItems: SkillApiDocument[] | [];
@@ -11,7 +15,7 @@ interface SkillOptions {
   userId: string;
   name: string;
   version: number;
-  resourceId: string[] | undefined;
+  resourceId: ResourceApiDocument[] | undefined;
 }
 export const AutoCompleteList = (props: AutoCompleteListProps) => {
   const { skillItems } = props;
