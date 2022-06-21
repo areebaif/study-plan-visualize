@@ -15,6 +15,7 @@ import { BadRequestError } from '../errors/badRequestError';
 import { logErrorMessage } from '../errors/customError';
 import { DatabaseErrors } from '../errors/databaseErrors';
 import { NotAuthorizedError } from '../errors/notAuthroizedError';
+import { Resource } from '../models/resource';
 
 const router = express.Router();
 
@@ -83,6 +84,7 @@ router.post(
         next: NextFunction
     ) => {
         try {
+            console.log('I am here add');
             const { name } = req.body;
             const { currentUser } = req;
             if (!currentUser) throw new NotAuthorizedError('not authorized');
@@ -103,11 +105,13 @@ router.post(
             }
             // first time default version to 1
             const version = 1;
+            const resourceId: ObjectId[] = [];
             const skillDoc = await Skills.insertSkill({
                 userId,
                 name,
                 version,
-                dbStatus
+                dbStatus,
+                resourceId
             });
             if (!skillDoc) throw new DatabaseErrors('unable to create skill');
             if (
@@ -160,13 +164,33 @@ router.get(
                 userId,
                 skillActiveStatus.active
             );
-            res.status(200).send({ data: skills });
+            const mappedResult = skills.map(async (element) => {
+                if (element.resourceId?.length) {
+                    const mappedResource = element.resourceId.map((id) => {
+                        return Resource.getResourceById(id);
+                    });
+                    const resolvedValues = await Promise.all(mappedResource);
+                    return {
+                        _id: element._id,
+                        userId: element.userId,
+                        name: element.name,
+                        version: element.version,
+                        resourceId: resolvedValues,
+                        dbStatus: element.dbStatus
+                    };
+                }
+                return element;
+            });
+            const result = await Promise.all(mappedResult);
+            res.status(200).send({ data: result });
         } catch (err) {
             logErrorMessage(err);
             next(err);
         }
     }
 );
+
+// get all skills with reour eiD and name
 
 router.get(
     '/api/skills/:id',
@@ -177,6 +201,7 @@ router.get(
         next: NextFunction
     ) => {
         try {
+            console.log('I am here update id');
             const { id } = req.params;
             const { currentUser } = req;
             if (!currentUser) throw new NotAuthorizedError('not authorized');
@@ -258,6 +283,7 @@ router.post(
         next: NextFunction
     ) => {
         try {
+            console.log('I am here update');
             const { id, name } = req.body;
             const { currentUser } = req;
             if (!currentUser) throw new NotAuthorizedError('not authorized');

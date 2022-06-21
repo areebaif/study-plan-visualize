@@ -27,7 +27,6 @@ function App() {
         throw new TypeError("Oops, we haven't got JSON!");
       }
       const { currentUser }: AuthApiReturnData = await response.json();
-      console.log("inisde backend call", currentUser);
       if (currentUser) {
         setUserData(currentUser);
         setIsLoggedIn(true);

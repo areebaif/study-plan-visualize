@@ -39,6 +39,7 @@ export class Resource {
     static collectionName = 'resource';
 
     static async insertResource(ResourceProps: insertResourceDocument) {
+        //console.log('inside insert reource', ResourceProps);
         try {
             const db = await connectDb();
             const { acknowledged, insertedId }: InsertOneResult = await db
@@ -142,7 +143,7 @@ export class Resource {
         } catch (err) {
             logErrorMessage(err);
             throw new DatabaseErrors(
-                'Unable to retrieve programming from database'
+                'Unable to retrieve resource from database'
             );
         }
     }
@@ -155,16 +156,16 @@ export class Resource {
                 // you only want to return user password in case you are doing a password check
                 .find({ $and: [{ userId: userId }, { name: name }] })
                 .toArray();
-            if (!result.length)
-                throw new DatabaseErrors(
-                    'Unable to retrieve programming language from database'
-                );
+            // if (!result.length)
+            //     throw new DatabaseErrors(
+            //         'Unable to retrieve programming language from database'
+            //     );
             const document = result[0];
             return document;
         } catch (err) {
             logErrorMessage(err);
             throw new DatabaseErrors(
-                'Unable to retrieve programming language from database'
+                'Unable to retrieve resource from database'
             );
         }
     }

@@ -22,7 +22,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import DeleteIcon from "@mui/icons-material/Delete";
 import BookIcon from "@mui/icons-material/Book";
 import CreateIcon from "@mui/icons-material/Create";
-import { skillActiveStatus } from "../../types";
+import { skillActiveStatus, ResourceApiDocument } from "../../types";
 
 type Item = {
   id?: string; // dummy data
@@ -32,7 +32,7 @@ type Item = {
   userId?: string;
   name?: string;
   version?: number;
-  resourceId?: string[] | undefined;
+  resourceId?: ResourceApiDocument[] | undefined;
   dbStatus?: skillActiveStatus;
 };
 
@@ -85,7 +85,9 @@ export const ItemList: React.FC<ItemListProps> = (props) => {
                 </ListItemAvatar>
                 <ListItemText
                   primary={item.name}
-                  secondary={`Learned By: Test, test ,test`}
+                  secondary={`Learned by: ${item.resourceId?.map(
+                    (element) => ` ${element.name}`
+                  )}`}
                 />
                 <Box
                   sx={{

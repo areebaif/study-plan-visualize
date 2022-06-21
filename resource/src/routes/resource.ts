@@ -34,7 +34,6 @@ router.post(
                 throw new BadRequestError(
                     'either user not authorised or resource name, type or learning status not provided'
                 );
-
             if (learningStatus < 0 || learningStatus > 100)
                 throw new BadRequestError(
                     'learnning status must be between 0 and 100'
@@ -53,7 +52,6 @@ router.post(
             );
             if (existingResource)
                 throw new DatabaseErrors('resource name already in use');
-
             //check if skillId supplied by user exist in database
             if (skillId) {
                 const promiseSkillArray = skillId.map((id) => {
@@ -62,6 +60,7 @@ router.post(
                 });
 
                 const allSkills = await Promise.all(promiseSkillArray);
+                console.log('after skill');
 
                 // map and only keep ids to store in resource database
                 skills = allSkills.map((skill) => {

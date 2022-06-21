@@ -19,7 +19,7 @@ export interface SkillApiDocument {
   userId: string;
   name: string;
   version: number;
-  resourceId: string[] | undefined;
+  resourceId: ResourceApiDocument[] | undefined;
   dbStatus?: skillActiveStatus;
 }
 export interface SkillApiReturnData {
