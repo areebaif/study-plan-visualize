@@ -132,7 +132,28 @@ router.get(
                 userId,
                 dbStatus
             );
-            res.status(200).send({ data: resource });
+            const mappedResult = resource.map(async (element) => {
+                if (element.skillId?.length) {
+                    const mappedResource = element.skillId.map((id) => {
+                        return Skills.getSkillById(id);
+                    });
+                    const resolvedValues = await Promise.all(mappedResource);
+                    return {
+                        _id: element._id,
+                        userId: element.userId,
+                        name: element.name,
+                        type: element.type,
+                        learningStatus: element.learningStatus,
+                        version: element.version,
+                        description: element.description,
+                        skillId: resolvedValues,
+                        dbStatus: element.dbStatus
+                    };
+                }
+                return element;
+            });
+            const result = await Promise.all(mappedResult);
+            res.status(200).send({ data: result });
         } catch (err) {
             logErrorMessage(err);
             next(err);
