@@ -85,9 +85,13 @@ export const ItemList: React.FC<ItemListProps> = (props) => {
                 </ListItemAvatar>
                 <ListItemText
                   primary={item.name}
-                  secondary={`Learned by: ${item.resourceId?.map(
-                    (element) => ` ${element.name}`
-                  )}`}
+                  secondary={
+                    item.resourceId?.length
+                      ? `Learned by: ${item.resourceId?.map(
+                          (element) => ` ${element.name}`
+                        )}`
+                      : `Learned by: `
+                  }
                 />
                 <Box
                   sx={{
