@@ -161,7 +161,7 @@ export const ItemsGridCard = (props: ItemsGridCardProps) => {
         throw new TypeError("Oops, we haven't got JSON!");
       }
       const { data, errors }: ResourceDocument = await response.json();
-      console.log("inisde resource backend call", data, errors);
+      console.log("inside resource backend call", data, errors);
       if (data) {
         setResourceItems(data);
         setResourceItemsChange(true);
@@ -187,6 +187,17 @@ export const ItemsGridCard = (props: ItemsGridCardProps) => {
     }
   };
 
+  React.useEffect(() => {
+    if (!resourceItemsChange) {
+      setErrors(null);
+      getAllResourceRequest();
+    }
+  }, [resourceItemsChange]);
+
+  const onResourceChange = () => {
+    setResourceItemsChange(false);
+  };
+
   return (
     <Card>
       <CardHeader title="Resource List" />
@@ -207,7 +218,7 @@ export const ItemsGridCard = (props: ItemsGridCardProps) => {
                 <TableCell>{item.name}</TableCell>
                 <TableCell></TableCell>
                 <TableCell>{`${item.learnedBy.map(
-                  (element) => element.skill
+                  (element) => ` ${element.skill}`
                 )}`}</TableCell>
                 <TableCell>
                   <LinearProgress
