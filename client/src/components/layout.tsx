@@ -36,7 +36,7 @@ export const Layout: React.FC = () => {
         throw new TypeError("Oops, we haven't got JSON!");
       }
       const { data, errors }: SkillApiReturnData = await response.json();
-      console.log("inisde backend call", data, errors);
+      console.log("inisde skillbakcned call", data, errors);
       if (data) {
         setSkillItems(data);
         setSkillItemsChange(true);
@@ -102,7 +102,10 @@ export const Layout: React.FC = () => {
             />
           </Grid>
           <Grid item xl={6} lg={6} sm={6} xs={12}>
-            <ItemsGridCard skillItems={skillItems} />
+            <ItemsGridCard
+              skillItems={skillItems}
+              onSkillChange={onSkillChange}
+            />
           </Grid>
           <Grid item xl={6} lg={6} sm={6} xs={12}>
             <ItemList
@@ -113,7 +116,10 @@ export const Layout: React.FC = () => {
             />
           </Grid>
           <Grid item xl={6} lg={6} sm={12} xs={12}>
-            <ItemsGridCard skillItems={skillItems} />
+            <ItemsGridCard
+              skillItems={skillItems}
+              onSkillChange={onSkillChange}
+            />
           </Grid>
         </Grid>
       </Container>

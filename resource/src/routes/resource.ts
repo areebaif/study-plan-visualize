@@ -43,6 +43,7 @@ router.post(
             const userId = new ObjectId(currentUser.id);
             const version = 1;
             const dbStatus = resourceActiveStatus.active;
+            const skillsArray = skillId?.map((element) => element._id);
             let skills: ObjectId[] | undefined;
 
             // check if resourceName already exists in database
@@ -53,8 +54,8 @@ router.post(
             if (existingResource)
                 throw new DatabaseErrors('resource name already in use');
             //check if skillId supplied by user exist in database
-            if (skillId) {
-                const promiseSkillArray = skillId.map((id) => {
+            if (skillsArray) {
+                const promiseSkillArray = skillsArray.map((id) => {
                     const parsedId = new ObjectId(id);
                     return Skills.getSkillById(parsedId);
                 });
@@ -280,12 +281,13 @@ router.post(
                     'version dbStatus and name are needed to update record'
                 );
             // define variables to update resource
+            const skillsArray = skillId?.map((element) => element._id);
             const newVersion = resourceDoc.version + 1;
             let newSkillId: ObjectId[] | undefined;
 
             //check if skillId and name supplied by user exist in database
-            if (skillId) {
-                const promiseSkillArray = skillId.map((id) => {
+            if (skillsArray) {
+                const promiseSkillArray = skillsArray.map((id) => {
                     const parsedId = new ObjectId(id);
                     return Skills.getSkillById(parsedId);
                 });
