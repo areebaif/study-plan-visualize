@@ -8,7 +8,13 @@ export interface AddResource {
     learningStatus: number;
     version: number;
     description?: string;
-    skillId?: string[];
+    skillId?: {
+        _id: string;
+        userId: string;
+        name: string;
+        resourceId: string[];
+        version: number;
+    }[];
     currentUser?: UserPayload | undefined;
 }
 

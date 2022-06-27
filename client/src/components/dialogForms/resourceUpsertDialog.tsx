@@ -8,16 +8,28 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import { Box, List, ListItem, ListItemText } from "@mui/material";
+import { Box, List, ListItem, ListItemText, Divider } from "@mui/material";
 
-import { SkillApiReturnData } from "../../types";
+import {
+  SkillApiReturnData,
+  SkillApiDocument,
+  ResourceApiDocument,
+} from "../../types";
+import { AutoCompleteList } from "../autoCompleteList";
 
 type FormDialogueProps = {
   open: boolean;
   setOpen: (val: boolean) => void;
   onItemChange: () => void;
+  onSkillChange: () => void;
   formType: string;
+  // The below value is used to populate a list of all skills to add to any resource
+  allSkillItem: [] | SkillApiDocument[];
   editName?: string;
+  editType?: string;
+  editLearningStatus?: number;
+  // This option populates already any skill values attached to the resource
+  editSkillId?: [] | SkillApiDocument[];
   id?: string;
   onEditItem?: () => void;
 };
@@ -25,24 +37,65 @@ type ApiRequestData = {
   name?: string;
   id?: string;
 };
+interface SkillOptions {
+  _id: string;
+  userId: string;
+  name: string;
+  version: number;
+  resourceId: ResourceApiDocument[] | undefined;
+}
 
 export const UpsertFormDialog: React.FC<FormDialogueProps> = (props) => {
-  const { open, setOpen, onItemChange, formType, editName, id, onEditItem } =
-    props;
+  const {
+    open,
+    setOpen,
+    onItemChange,
+    onSkillChange,
+    formType,
+    allSkillItem,
+    editName,
+    editType,
+    editLearningStatus,
+    editSkillId,
+    id,
+    onEditItem,
+  } = props;
   const [name, setName] = React.useState<string | undefined>(
     editName ? editName : ""
   );
+  const [type, setType] = React.useState<string | undefined>(
+    editType ? editType : ""
+  );
+  const [learningStatus, setLearningStatus] = React.useState<
+    number | undefined
+  >(editLearningStatus ? editLearningStatus : undefined);
+
+  const [autoCompleteListValue, setAutoCompleteListValue] = React.useState<
+    SkillOptions[] | undefined
+  >(undefined);
   const [upsertItem, setUpsertItem] = React.useState(false);
   const [errors, setErrors] = React.useState<JSX.Element | null>(null);
 
   // back end post request data
   const url =
-    formType === "Add Skill" ? "/api/skills/add" : "/api/skills/update";
-  const addSkillData = { name: name };
-  const editSkillData = { name: name, id: id };
+    formType === "Add Resource" ? "/api/resource/add" : "/api/resource/update";
+  const addData = {
+    name: name,
+    type: type,
+    learningStatus: learningStatus,
+    skillId: autoCompleteListValue,
+  };
+  const editData = {
+    name: name,
+    id: id,
+    type: type,
+    learningStatus: learningStatus,
+    skillId: autoCompleteListValue,
+  };
 
   const makeRequest = async (data: ApiRequestData, url: string) => {
     try {
+      console.log("data to be sent to backend", data);
       const response = await fetch(url, {
         method: "POST",
         body: JSON.stringify(data),
@@ -64,6 +117,7 @@ export const UpsertFormDialog: React.FC<FormDialogueProps> = (props) => {
         setName("");
         // trigger callback to top component
         onItemChange();
+        onSkillChange();
         onEditItem?.();
       } else if (responseObject.errors) {
         setUpsertItem(false);
@@ -95,21 +149,32 @@ export const UpsertFormDialog: React.FC<FormDialogueProps> = (props) => {
     setOpen(false);
     setErrors(null);
     setName("");
+    setType("");
+    setLearningStatus(undefined);
     // this callback clears state which we want to do when we cancel
     onEditItem?.();
   };
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setName(event.target.value);
+  };
+
+  const handleTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setType(event.target.value);
+  };
+
+  const handleProgressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const num = parseInt(event.target.value);
+    setLearningStatus(num);
   };
 
   React.useEffect(() => {
     if (upsertItem) {
       setErrors(null);
-
-      formType === "Add Skill"
-        ? makeRequest(addSkillData, url)
-        : makeRequest(editSkillData, url);
+      console.log(name, learningStatus, autoCompleteListValue, type);
+      formType === "Add Resource"
+        ? makeRequest(addData, url)
+        : makeRequest(editData, url);
     }
   }, [upsertItem]);
 
@@ -125,8 +190,31 @@ export const UpsertFormDialog: React.FC<FormDialogueProps> = (props) => {
           id="outlined-name"
           label="Name"
           value={name}
-          onChange={handleChange}
+          onChange={handleNameChange}
         />
+        <TextField
+          autoFocus
+          margin="dense"
+          id="outlined-type"
+          label="Type"
+          value={type}
+          onChange={handleTypeChange}
+        />
+        <TextField
+          autoFocus
+          margin="dense"
+          id="outlined-Progress"
+          label="Progress"
+          value={learningStatus}
+          onChange={handleProgressChange}
+        />
+        <Divider sx={{ margin: 0.5 }} />
+        <AutoCompleteList
+          skillItems={allSkillItem}
+          value={autoCompleteListValue}
+          setValue={setAutoCompleteListValue}
+        ></AutoCompleteList>
+        <Divider />
         {errors}
       </DialogContent>
       <DialogActions>

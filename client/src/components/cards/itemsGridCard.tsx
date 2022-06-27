@@ -11,15 +11,17 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  TableSortLabel,
-  Tooltip,
   LinearProgress,
   List,
   ListItem,
   ListItemText,
+  IconButton,
 } from "@mui/material";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import { SeverityPill } from "../severitypill";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CreateIcon from "@mui/icons-material/Create";
+import { UpsertFormDialog } from "../dialogForms/resourceUpsertDialog";
 
 import { SkillApiDocument, ErrorDocument } from "../../types";
 const orders = [
@@ -110,7 +112,13 @@ interface ResourceDocument {
     name: string;
     type: string;
     learningStatus: number;
-    skillId: string[];
+    skillId: {
+      _id: string;
+      userId: string;
+      name: string;
+      version: number;
+      resourceId: string[] | undefined;
+    }[];
   }[];
   errors: ErrorDocument[];
 }
@@ -125,25 +133,27 @@ interface MappedResources {
 }
 type ItemsGridCardProps = {
   skillItems: SkillApiDocument[] | [];
+  onSkillChange: () => void;
 };
 
 // TODO:function to Map resources
 
 export const ItemsGridCard = (props: ItemsGridCardProps) => {
   // keep the state of popup component here in case we have to edit so we need to prepopulate list
-  const { skillItems } = props;
+  const { skillItems, onSkillChange } = props;
   const [errors, setErrors] = React.useState<JSX.Element | null>(null);
   const [resourceItems, setResourceItems] = React.useState<
     ResourceDocument["data"] | []
   >([]);
   const [resourceItemsChange, setResourceItemsChange] = React.useState(false);
   const [open, setOpen] = React.useState(false);
+  const [editOpen, setEditOpen] = React.useState(false);
+  // // props to delete a skill Item
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
 
   // props to edit a resource Item
-  // Note: These are all independant states hence we are using UseState not UseReducer.
-  // Validation logic of all these states is at backend, Hence, We are not doing validation on front-end, thus no need for useReducer
   const [editName, setEditName] = React.useState("");
-  const [editId, setEditId] = React.useState("");
+  const [itemId, setItemId] = React.useState<undefined | string>(undefined);
   const [editType, setEditType] = React.useState("");
   const [editLearningStatus, setEditLearningStatus] = React.useState<
     number | undefined
@@ -213,20 +223,36 @@ export const ItemsGridCard = (props: ItemsGridCardProps) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {orders.map((item) => (
-              <TableRow hover key={item.id}>
-                <TableCell>{item.name}</TableCell>
-                <TableCell></TableCell>
-                <TableCell>{`${item.learnedBy.map(
-                  (element) => ` ${element.skill}`
-                )}`}</TableCell>
-                <TableCell>
-                  <LinearProgress
-                    value={item.learningStatus}
-                    variant="determinate"
-                  />
-                </TableCell>
-                <TableCell>
+            {resourceItems &&
+              resourceItems.map((item) => (
+                <TableRow hover key={item.id}>
+                  <TableCell>{item.name}</TableCell>
+                  <TableCell>{item.type}</TableCell>
+                  <TableCell>{`${item.skillId.map(
+                    (element) => ` ${element.name}`
+                  )}`}</TableCell>
+                  <TableCell>
+                    <LinearProgress
+                      value={item.learningStatus}
+                      variant="determinate"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <IconButton
+                      onClick={() => {
+                        setEditName(item.name);
+                        setItemId(item.id);
+                        setEditType(item.type);
+                        setEditLearningStatus(item.learningStatus);
+                        setEditOpen(true);
+                      }}
+                      edge="end"
+                      size="small"
+                    >
+                      <CreateIcon />
+                    </IconButton>
+                  </TableCell>
+                  {/* <TableCell>
                   <SeverityPill
                     color={
                       (item.status === "delivered" && "success") ||
@@ -236,9 +262,9 @@ export const ItemsGridCard = (props: ItemsGridCardProps) => {
                   >
                     {item.status}
                   </SeverityPill>
-                </TableCell>
-              </TableRow>
-            ))}
+                </TableCell> */}
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </Box>
@@ -258,6 +284,16 @@ export const ItemsGridCard = (props: ItemsGridCardProps) => {
         >
           Add Resource
         </Button>
+        {open && (
+          <UpsertFormDialog
+            open={open}
+            setOpen={setOpen}
+            allSkillItem={skillItems}
+            onItemChange={onResourceChange}
+            onSkillChange={onSkillChange}
+            formType={"Add Resource"}
+          ></UpsertFormDialog>
+        )}
       </Box>
     </Card>
   );
