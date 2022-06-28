@@ -9,16 +9,12 @@ import {
 
 type AutoCompleteListProps = {
   skillItems: SkillApiDocument[] | [];
-  value: SkillOptions[] | undefined;
-  setValue: React.Dispatch<React.SetStateAction<SkillOptions[] | undefined>>;
+  value: SkillApiDocument[] | undefined;
+  setValue: React.Dispatch<
+    React.SetStateAction<SkillApiDocument[] | undefined>
+  >;
 };
-interface SkillOptions {
-  _id: string;
-  userId: string;
-  name: string;
-  version: number;
-  resourceId: ResourceApiDocument[] | undefined;
-}
+
 export const AutoCompleteList = (props: AutoCompleteListProps) => {
   const { skillItems, value, setValue } = props;
   // These are all the multiple values selected by the user.
@@ -29,7 +25,7 @@ export const AutoCompleteList = (props: AutoCompleteListProps) => {
     <Autocomplete
       sx={{ width: 1 }}
       value={value}
-      onChange={(event: any, newValue: SkillOptions[] | undefined) => {
+      onChange={(event: any, newValue: SkillApiDocument[] | undefined) => {
         setValue(newValue);
       }}
       multiple

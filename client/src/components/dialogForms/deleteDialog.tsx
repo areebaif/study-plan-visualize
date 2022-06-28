@@ -1,10 +1,8 @@
 import * as React from "react";
 import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { Box, List, ListItem, ListItemText } from "@mui/material";
 
@@ -17,19 +15,31 @@ type FormDialogueProps = {
   onDeleteItem: () => void;
   formType: string;
   id?: string;
+  onResourceItemChange?: () => void;
 };
 type ApiRequestData = {
   id?: string;
 };
 
 export const DeleteFormDialog: React.FC<FormDialogueProps> = (props) => {
-  const { open, setOpen, onItemChange, formType, id, onDeleteItem } = props;
+  const {
+    open,
+    setOpen,
+    onItemChange,
+    onResourceItemChange,
+    formType,
+    id,
+    onDeleteItem,
+  } = props;
   const [upsertItem, setUpsertItem] = React.useState(false);
   const [errors, setErrors] = React.useState<JSX.Element | null>(null);
   console.log("delete", id);
 
   // back end post request data
-  const url = "/api/skills/destroy";
+  const url =
+    formType === "Delete Skill"
+      ? "/api/skills/destroy"
+      : "/api/resource/destroy";
   const data = { id: id };
 
   const makeRequest = async (data: ApiRequestData, url: string) => {
@@ -55,8 +65,9 @@ export const DeleteFormDialog: React.FC<FormDialogueProps> = (props) => {
         // close the dialogue box
         setOpen(false);
         // trigger callback to top component
-        onItemChange();
+        onResourceItemChange?.();
         onDeleteItem();
+        onItemChange();
       } else if (responseObject.errors) {
         setUpsertItem(false);
         const error = (

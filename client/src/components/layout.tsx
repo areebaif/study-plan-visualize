@@ -36,7 +36,7 @@ export const Layout: React.FC = () => {
         throw new TypeError("Oops, we haven't got JSON!");
       }
       const { data, errors }: SkillApiReturnData = await response.json();
-      console.log("inisde skillbakcned call", data, errors);
+      console.log("inisde skillbackend call", data, errors);
       if (data) {
         setSkillItems(data);
         setSkillItemsChange(true);
