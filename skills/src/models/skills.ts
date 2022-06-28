@@ -70,11 +70,13 @@ export class Skills {
         dbStatus: skillActiveStatus
     ) {
         try {
+            console.log('inside mongodb get all function', userId, dbStatus);
             const db = await connectDb();
             const result: WithId<returnSkillDocument>[] = await db
                 .collection(Skills.collectionName)
                 .find({ userId, dbStatus })
                 .toArray();
+            console.log('inside mongodb get all result function', result);
             if (!result)
                 throw new DatabaseErrors(
                     'Unable to retrieve skill from database'

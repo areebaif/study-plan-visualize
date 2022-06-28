@@ -6,15 +6,10 @@ import TextField from "@mui/material/TextField";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import { Box, List, ListItem, ListItemText, Divider } from "@mui/material";
+import { List, ListItem, ListItemText, Divider } from "@mui/material";
 
-import {
-  SkillApiReturnData,
-  SkillApiDocument,
-  ResourceApiDocument,
-} from "../../types";
+import { SkillApiReturnData, SkillApiDocument } from "../../types";
 import { AutoCompleteList } from "../autoCompleteList";
 
 type FormDialogueProps = {
@@ -37,13 +32,6 @@ type ApiRequestData = {
   name?: string;
   id?: string;
 };
-interface SkillOptions {
-  _id: string;
-  userId: string;
-  name: string;
-  version: number;
-  resourceId: ResourceApiDocument[] | undefined;
-}
 
 export const UpsertFormDialog: React.FC<FormDialogueProps> = (props) => {
   const {
@@ -63,6 +51,7 @@ export const UpsertFormDialog: React.FC<FormDialogueProps> = (props) => {
   const [name, setName] = React.useState<string | undefined>(
     editName ? editName : ""
   );
+  const [progressError, setProgressError] = React.useState(false);
   const [type, setType] = React.useState<string | undefined>(
     editType ? editType : ""
   );
@@ -71,8 +60,8 @@ export const UpsertFormDialog: React.FC<FormDialogueProps> = (props) => {
   >(editLearningStatus ? editLearningStatus : undefined);
 
   const [autoCompleteListValue, setAutoCompleteListValue] = React.useState<
-    SkillOptions[] | undefined
-  >(undefined);
+    SkillApiDocument[] | undefined
+  >(editSkillId?.length ? editSkillId : []);
   const [upsertItem, setUpsertItem] = React.useState(false);
   const [errors, setErrors] = React.useState<JSX.Element | null>(null);
 
@@ -165,7 +154,13 @@ export const UpsertFormDialog: React.FC<FormDialogueProps> = (props) => {
 
   const handleProgressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const num = parseInt(event.target.value);
-    setLearningStatus(num);
+    if (isNaN(num)) {
+      setProgressError(true);
+      setLearningStatus(undefined);
+    } else {
+      setProgressError(false);
+      setLearningStatus(num);
+    }
   };
 
   React.useEffect(() => {
@@ -205,6 +200,8 @@ export const UpsertFormDialog: React.FC<FormDialogueProps> = (props) => {
           margin="dense"
           id="outlined-Progress"
           label="Progress"
+          error={progressError}
+          helperText="Use value between 0 and 100"
           value={learningStatus}
           onChange={handleProgressChange}
         />

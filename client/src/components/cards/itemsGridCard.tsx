@@ -22,6 +22,7 @@ import { SeverityPill } from "../severitypill";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CreateIcon from "@mui/icons-material/Create";
 import { UpsertFormDialog } from "../dialogForms/resourceUpsertDialog";
+import { DeleteFormDialog } from "../dialogForms/deleteDialog";
 
 import { SkillApiDocument, ErrorDocument } from "../../types";
 const orders = [
@@ -107,29 +108,14 @@ const orders = [
 
 interface ResourceDocument {
   data: {
-    id: string;
+    _id: string;
     userId: string;
     name: string;
     type: string;
     learningStatus: number;
-    skillId: {
-      _id: string;
-      userId: string;
-      name: string;
-      version: number;
-      resourceId: string[] | undefined;
-    }[];
+    skillId: SkillApiDocument[] | undefined;
   }[];
   errors: ErrorDocument[];
-}
-
-interface MappedResources {
-  id: string;
-  userId: string;
-  name: string;
-  type: string;
-  learningStatus: number;
-  skills: { skillId: string; skillName: string }[];
 }
 type ItemsGridCardProps = {
   skillItems: SkillApiDocument[] | [];
@@ -148,7 +134,6 @@ export const ItemsGridCard = (props: ItemsGridCardProps) => {
   const [resourceItemsChange, setResourceItemsChange] = React.useState(false);
   const [open, setOpen] = React.useState(false);
   const [editOpen, setEditOpen] = React.useState(false);
-  // // props to delete a skill Item
   const [deleteOpen, setDeleteOpen] = React.useState(false);
 
   // props to edit a resource Item
@@ -158,7 +143,9 @@ export const ItemsGridCard = (props: ItemsGridCardProps) => {
   const [editLearningStatus, setEditLearningStatus] = React.useState<
     number | undefined
   >(undefined);
-  const [editSkillId, setEditSkillId] = React.useState<string[] | []>([]);
+  const [editSkillId, setEditSkillId] = React.useState<
+    SkillApiDocument[] | [] | undefined
+  >([]);
 
   const getAllResourceRequest = async () => {
     try {
@@ -208,6 +195,17 @@ export const ItemsGridCard = (props: ItemsGridCardProps) => {
     setResourceItemsChange(false);
   };
 
+  const onEditItem = () => {
+    setEditName("");
+    setItemId(undefined);
+    setEditType("");
+    setEditLearningStatus(undefined);
+    setEditSkillId(undefined);
+  };
+
+  const onDeleteItem = () => {
+    setItemId(undefined);
+  };
   return (
     <Card>
       <CardHeader title="Resource List" />
@@ -225,10 +223,10 @@ export const ItemsGridCard = (props: ItemsGridCardProps) => {
           <TableBody>
             {resourceItems &&
               resourceItems.map((item) => (
-                <TableRow hover key={item.id}>
+                <TableRow hover key={item._id}>
                   <TableCell>{item.name}</TableCell>
                   <TableCell>{item.type}</TableCell>
-                  <TableCell>{`${item.skillId.map(
+                  <TableCell>{`${item.skillId?.map(
                     (element) => ` ${element.name}`
                   )}`}</TableCell>
                   <TableCell>
@@ -241,15 +239,26 @@ export const ItemsGridCard = (props: ItemsGridCardProps) => {
                     <IconButton
                       onClick={() => {
                         setEditName(item.name);
-                        setItemId(item.id);
+                        setItemId(item._id);
                         setEditType(item.type);
                         setEditLearningStatus(item.learningStatus);
+                        setEditSkillId(item.skillId);
                         setEditOpen(true);
                       }}
                       edge="end"
                       size="small"
                     >
                       <CreateIcon />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => {
+                        setItemId(item._id);
+                        setDeleteOpen(true);
+                      }}
+                      edge="end"
+                      size="small"
+                    >
+                      <DeleteIcon />
                     </IconButton>
                   </TableCell>
                   {/* <TableCell>
@@ -293,6 +302,33 @@ export const ItemsGridCard = (props: ItemsGridCardProps) => {
             onSkillChange={onSkillChange}
             formType={"Add Resource"}
           ></UpsertFormDialog>
+        )}
+        {editOpen && (
+          <UpsertFormDialog
+            open={editOpen}
+            setOpen={setEditOpen}
+            allSkillItem={skillItems}
+            onItemChange={onResourceChange}
+            onSkillChange={onSkillChange}
+            formType={"Edit Resource"}
+            editName={editName}
+            editType={editType}
+            editLearningStatus={editLearningStatus}
+            editSkillId={editSkillId}
+            id={itemId}
+            onEditItem={onEditItem}
+          ></UpsertFormDialog>
+        )}
+        {deleteOpen && (
+          <DeleteFormDialog
+            open={deleteOpen}
+            setOpen={setDeleteOpen}
+            onItemChange={onSkillChange}
+            formType={"Delete Resource"}
+            onDeleteItem={onDeleteItem}
+            id={itemId}
+            onResourceItemChange={onResourceChange}
+          ></DeleteFormDialog>
         )}
       </Box>
     </Card>
