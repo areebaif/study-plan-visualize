@@ -33,7 +33,6 @@ export const DeleteFormDialog: React.FC<FormDialogueProps> = (props) => {
   } = props;
   const [upsertItem, setUpsertItem] = React.useState(false);
   const [errors, setErrors] = React.useState<JSX.Element | null>(null);
-  console.log("delete", id);
 
   // back end post request data
   const url =

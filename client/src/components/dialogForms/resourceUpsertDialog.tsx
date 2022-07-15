@@ -166,7 +166,6 @@ export const UpsertFormDialog: React.FC<FormDialogueProps> = (props) => {
   React.useEffect(() => {
     if (upsertItem) {
       setErrors(null);
-      console.log(name, learningStatus, autoCompleteListValue, type);
       formType === "Add Resource"
         ? makeRequest(addData, url)
         : makeRequest(editData, url);
