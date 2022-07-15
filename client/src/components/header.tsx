@@ -35,7 +35,6 @@ export const Header: React.FC<headerProps> = ({ isLoggedIn }) => {
   console.log("userloginStatus", isLoggedIn);
 
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
-    console.log("Clicked!");
     setAnchorElUser(event.currentTarget);
   };
 
