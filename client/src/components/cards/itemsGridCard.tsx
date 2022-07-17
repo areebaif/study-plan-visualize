@@ -18,7 +18,6 @@ import {
   IconButton,
 } from "@mui/material";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
-import { SeverityPill } from "../severitypill";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CreateIcon from "@mui/icons-material/Create";
 import { UpsertFormDialog } from "../dialogForms/resourceUpsertDialog";
