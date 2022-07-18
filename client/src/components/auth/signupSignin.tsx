@@ -1,11 +1,7 @@
 import * as React from "react";
 import {
   Box,
-  Container,
-  Grid,
   Button,
-  Card,
-  CardContent,
   Typography,
   Avatar,
   List,
