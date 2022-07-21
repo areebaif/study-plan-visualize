@@ -1,11 +1,7 @@
 import * as React from "react";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
-import {
-  SkillApiDocument,
-  SkillApiReturnData,
-  ResourceApiDocument,
-} from "../types";
+import { SkillApiDocument } from "../types";
 
 type AutoCompleteListProps = {
   skillItems: SkillApiDocument[] | [];
