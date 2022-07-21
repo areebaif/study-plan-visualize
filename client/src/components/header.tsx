@@ -29,8 +29,6 @@ export const Header: React.FC<headerProps> = ({ isLoggedIn }) => {
   );
   const open = Boolean(anchorElUser);
   const ctx = React.useContext(AuthContext);
-  console.log("hello!!!!", ctx);
-  console.log("userloginStatus", isLoggedIn);
 
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
